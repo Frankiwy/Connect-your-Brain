@@ -41,44 +41,64 @@ asd_td_bind_matrix = rbind(asd_bind_cor, td_bind_cor)
 
 t_bind <- quantile(abs(asd_td_bind_matrix), probs = c(0.8)) 
 t_bind_zfisher = zfisher(t_bind)
-
+t_zfisher = zfisher(t)
 
 CI_function <- function(N,rho,alpha,t){
   se = 1/sqrt(N-3)
   lower = rho - qnorm(1-(alpha/2)/choose(116,2))*se
   upper = rho + qnorm(1-(alpha/2)/choose(116,2))*se
-  print(c(lower,upper))
-  if (-t>= lower && -t<= upper) return(0)
-  if (t>= lower && t<= upper) return(0)
-  else return(1)
+  if (-t>= upper | t<= lower) return(1)
+  else return(0)
 }
 
-CI_function(34,-0.775,1-0.95,t_bind_zfisher)
 
 
 
+asd_bind_matrix_zfisher = zfisher(asd_bind_cor)
 
+find_edges <- function(matrix,N,t){
+  for (i in 1:nrow(matrix)){
+    for (j in 1:ncol(matrix)){
+      if (i != j) matrix[i,j] = CI_function(N, matrix[i,j], 0.05,t)
+      else matrix[i,j] = 0
+    }
+  }
+  return(matrix)
+}
+asd_bind_matrix_zfisher = zfisher(asd_bind_cor)
+asd_bind_matrix_zfisher <- find_edges(asd_bind_matrix_zfisher, 145*12, t_bind_zfisher )
+graph_asd <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher, mode = c("undirected") )
+plot(graph_asd, vertex.size = 1, edge.size = 0.001, vertex.label=NA,
+     vertex.frame.color=NA, vertex.color ='red', edge.color='black')
 
+td_bind_matrix_zfisher = zfisher(td_bind_cor)
+td_bind_matrix_zfisher <- find_edges(td_bind_matrix_zfisher, 145*12, t_bind_zfisher )
+graph_td <- graph_from_adjacency_matrix(td_bind_matrix_zfisher, mode = c("undirected") )
+plot(graph_td, vertex.size = 1, edge.size = 0.001, vertex.label=NA,
+     vertex.frame.color=NA, vertex.color ='red', edge.color='black')
 
-asd_bind_matrix_zfisher = abs(zfisher(asd_bind_cor))
-asd_bind_matrix_zfisher[asd_bind_matrix_zfisher>t_bind_zfisher] <- 1
-asd_bind_matrix_zfisher[asd_bind_matrix_zfisher<=t_bind_zfisher] <- 0
+c(length(V(graph_asd)),length(V(graph_td)))
+c(length(E(graph_asd)),length(E(graph_td)))
+plot(degree_distribution(graph_asd, cumulative = FALSE))
+plot(degree_distribution(graph_td, cumulative = FALSE))
 
-td_bind_matrix_zfisher = abs(zfisher(td_bind_cor))
-td_bind_matrix_zfisher[td_bind_matrix_zfisher>t_bind_zfisher] <- 1
-td_bind_matrix_zfisher[td_bind_matrix_zfisher<=t_bind_zfisher] <- 0
+asd_eigen_centrality = eigen_centrality(graph_asd)
+plot(sort(asd_eigen_centrality$vector))
+asd_betweenness <- betweenness(graph_asd)
+plot(sort(asd_betweenness), ylim = c(0,50))
 
+td_eigen_centrality = eigen_centrality(graph_td)
+plot(sort(td_eigen_centrality$vector))
+td_betweenness <- betweenness(graph_td)
+plot(sort(td_betweenness), ylim = c(0,50))
 
-graph_asd <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher)
-graph_td <- graph_from_adjacency_matrix(td_bind_matrix_zfisher)
+#write_graph(graph_asd, "graph_asd.txt", format = c("edgelist"))
+#write_graph(graph_td, "graph_td.txt", format = c("edgelist"))
 
-write_graph(graph_asd, "graph_asd.txt", format = c("edgelist"))
-write_graph(graph_td, "graph_td.txt", format = c("edgelist"))
+######################### APPRACH 2 ###########################
 
-# APPRACH 2:
 asd_cor = lapply(asd_sel, cor) # list of correlation matrices
 td_cor = lapply(td_sel, cor) # list of correlation matrices
-
 
 asd_matrix = do.call(rbind, asd_cor) # combine correlation matrices into 1 matrix
 td_matrix = do.call(rbind, td_cor)  # combine correaltion matrices into 1 matrix

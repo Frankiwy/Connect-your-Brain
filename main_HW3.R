@@ -1,5 +1,6 @@
 
 # Libraries, Imports & Functions -------------------------------------------
+set.seed(42)
 library(igraph)
 load("../Connect-your-Brain/data/hw3_data.RData") # import data
 dir.create("images_asd", showWarnings = TRUE)
@@ -8,18 +9,26 @@ dir.create("images_td", showWarnings = TRUE)
 
 zfisher <- function(x) 1/2*log((1+x)/(1-x)) # Z-Fisher Transform function
 
-CI_function <- function(N,rho,alpha,t){
+CI_function <- function(N,rho,alpha,t,bonferroni=TRUE){
   se = 1/sqrt(N-3)
-  lower = rho - qnorm(1-(alpha/2)/choose(116,2))*se
-  upper = rho + qnorm(1-(alpha/2)/choose(116,2))*se
+  
+  if (bonferroni){
+    lower = rho - qnorm(1-(alpha/2)/choose(116,2))*se
+    upper = rho + qnorm(1-(alpha/2)/choose(116,2))*se
+  }  
+  else{
+    lower = rho - qnorm(1-(alpha/2))*se
+    upper = rho + qnorm(1-(alpha/2))*se
+  }
+  #print(c(rho - qnorm(1-(alpha/2))*se,rho - qnorm(1-(alpha/2)/choose(116,2))*se))
   if (-t>= upper | t<= lower) return(1)
   else return(0)
 }
 
-find_edges <- function(matrix,N,t){
+find_edges <- function(matrix,N,t,bonferroni=TRUE){
   for (i in 1:nrow(matrix)){
     for (j in 1:ncol(matrix)){
-      if (i != j) matrix[i,j] = CI_function(N, matrix[i,j], 0.05,t)
+      if (i != j) matrix[i,j] = CI_function(N, matrix[i,j], 0.05,t,bonferroni)
       else matrix[i,j] = 0
     }
   }
@@ -45,12 +54,12 @@ f_plot<- function(g,name=NA,width_edges=(0.2+E(graph_asd_2)$weight)^1.5*10){
   }
 }
 
-get_graphs <- function(list_df,t){
+get_graphs <- function(list_df,t,bonferroni=TRUE){
   graph_list <- list()
   n = 1
   for (df in list_df){
     df_zfisher <- zfisher(df)
-    edges <- find_edges(df_zfisher,nrow(df_zfisher),t)
+    edges <- find_edges(df_zfisher,nrow(df_zfisher),t,bonferroni)
     graph_get <- graph_from_adjacency_matrix(edges, mode = c("undirected") )
     graph_list[[n]] <- graph_get
     n = n+1
@@ -58,12 +67,12 @@ get_graphs <- function(list_df,t){
   return(graph_list)
 }
 
-get_aggregate_graph <- function(list_df,t){
+get_aggregate_graph <- function(list_df,t,bonferroni=TRUE){
   graph_matrix_list <- list()
   n = 1
   for (df in list_df){
     df_zfisher <- zfisher(df)
-    edges <- find_edges(df_zfisher,nrow(df_zfisher),t)
+    edges <- find_edges(df_zfisher,nrow(df_zfisher),t,bonferroni)
     graph_matrix_list[[n]] <- edges
     n = n+1
     #print(sum(edges))
@@ -103,16 +112,16 @@ t_bind <- quantile(abs(asd_td_bind_matrix), probs = c(0.8)) # get threshold
 t_bind_zfisher = zfisher(t_bind) # apply zfisher on threshold
 
 
-asd_bind_matrix_zfisher = zfisher(asd_bind_cor) # apply zfisher on asd
-asd_bind_matrix_zfisher <- find_edges(asd_bind_matrix_zfisher, 145*12, t_bind_zfisher )
+asd_bind_matrix_zfisher_cor = zfisher(asd_bind_cor) # apply zfisher on asd
+asd_bind_matrix_zfisher <- find_edges(asd_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher )
 graph_asd <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher, mode = c("undirected") )
 
 layouts <- layout.davidson.harel(graph_asd) # get general layout
 
 f_plot(graph_asd,name='images_asd/asd_1.png',width_edges = 1)
 
-td_bind_matrix_zfisher = zfisher(td_bind_cor) # apply zfisher on td
-td_bind_matrix_zfisher <- find_edges(td_bind_matrix_zfisher, 145*12, t_bind_zfisher )
+td_bind_matrix_zfisher_cor = zfisher(td_bind_cor) # apply zfisher on td
+td_bind_matrix_zfisher <- find_edges(td_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher)
 graph_td <- graph_from_adjacency_matrix(td_bind_matrix_zfisher, mode = c("undirected") )
 
 f_plot(graph_td,name='images_td/td_1.png',width_edges = 1)
@@ -184,5 +193,69 @@ for (g in graph_td_list){
   f_plot(g,name=paste("images_td/td_2_person_",m,".png",sep=""),width_edges = 1)
   m=m+1 
 }
+
+
+
+# part 1 & 2 without Bonferroni Correction --------------------------------
+
+asd_bind_matrix_zfisher_no_bonferroni <- find_edges(asd_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher,bonferroni=FALSE )
+graph_asd_no_bonferroni <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher_no_bonferroni, mode = c("undirected") )
+f_plot(graph_asd_no_bonferroni,name='images_asd/asd_1_no_bonferroni.png',width_edges = 1)
+
+
+td_bind_matrix_zfisher_no_bonferroni <- find_edges(td_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher,bonferroni = FALSE)
+graph_td_no_bonferroni <- graph_from_adjacency_matrix(td_bind_matrix_zfisher_no_bonferroni, mode = c("undirected") )
+f_plot(graph_td_no_bonferroni,name='images_td/td_1_no_bonferroni.png',width_edges = 1)
+
+sum(asd_bind_matrix_zfisher - asd_bind_matrix_zfisher_no_bonferroni)
+sum(td_bind_matrix_zfisher - td_bind_matrix_zfisher_no_bonferroni)
+
+######### APPROACH 2 #############
+
+
+edges_asd_2_no_bonferroni <- get_aggregate_graph(asd_cor, t_bind_zfisher, bonferroni = FALSE)
+graph_asd_2_no_bonferroni <- graph_from_adjacency_matrix(edges_asd_2_no_bonferroni,
+                                           mode = c("undirected"),
+                                           weighted = TRUE)
+
+f_plot(graph_asd_2_no_bonferroni,name='images_asd/asd_2_new_no_bonferroni.png')
+
+edges_asd_2 <- get_aggregate_graph(asd_cor, t_bind_zfisher)
+graph_asd_2 <- graph_from_adjacency_matrix(edges_asd_2,
+                                           mode = c("undirected"),
+                                           weighted = TRUE)
+
+f_plot(graph_asd_2,name='images_asd/asd_new_2.png')
+
+
+
+
+
+
+edges_td_2_no_bonferroni <- get_aggregate_graph(td_cor, t_bind_zfisher, bonferroni=FALSE)
+graph_td_2_no_bonferroni <- graph_from_adjacency_matrix(edges_td_2_no_bonferroni,
+                                          mode = c("undirected"),
+                                          weighted = TRUE)
+
+f_plot(graph_td_2_no_bonferroni,name='images_td/td_2_no_bonferroni.png')
+
+
+graph_asd_list_no_bonferroni <- get_graphs(asd_cor, t_bind_zfisher, bonferroni = FALSE) #graph per each asd person
+graph_td_list_no_bonferroni <- get_graphs(td_cor, t_bind_zfisher, bonferroni = FALSE) #graph per each td person
+
+
+m=1
+for (g in graph_asd_list_no_bonferroni){
+  f_plot(g,name=paste("images_asd/asd_2_person_",m,"_no_bonferroni.png",sep=""),width_edges = 1)
+  m=m+1 
+}
+
+m=1
+for (g in graph_td_list_no_bonferroni){
+  f_plot(g,name=paste("images_td/td_2_person_",m,"_no_bonferroni.png",sep=""),width_edges = 1)
+  m=m+1 
+}
+
+
 
 

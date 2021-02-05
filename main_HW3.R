@@ -35,10 +35,11 @@ find_edges <- function(matrix,N,t,bonferroni=TRUE){
   return(matrix)
 }
 
-f_plot<- function(g,name=NA,width_edges=(0.2+E(graph_asd_2)$weight)^1.5*10){
+f_plot<- function(g,name=NA,width_edges=NA){
+  if (is.na(width_edges)) width_edges=(0.1+E(g)$weight)^1.5*8
   
   if (!is.na(name)){
-    png(filename=name, width = 8000, height = 3775)
+    png(filename=name, width = 10000, height = 4720)
     plot(g, vertex.size = 1, edge.size = 0.001,
          edge.width= width_edges,
          vertex.frame.color=NA, vertex.color ='red',

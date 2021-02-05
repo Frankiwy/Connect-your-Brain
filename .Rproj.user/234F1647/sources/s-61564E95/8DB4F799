@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1612546149893.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "8DB4F799",
+    "lastKnownWriteTime" : 1612544996,
+    "last_content_update" : 1612547050082,
+    "path" : "G:/ADM/Connect-your-Brain/main_HW3.R",
+    "project_path" : "main_HW3.R",
+    "properties" : {
+        "cursorPosition" : "0,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

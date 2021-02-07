@@ -293,9 +293,35 @@ myfun_CI(rnorm(100000,2,1), 0.005)
 
 for (m in 1:3){
   
-  myfun_CI(array(boost_tensor_res[7,1,],dim=c(116,116)), .68)
+  myfun_CI(array(boost_tensor_res[7,1,],dim=c(116,116)), .74)
   
 }
+
+find_p_value <-function(datax,threshold=0){
+  for (i in 0:200){
+    alpha=(200-i)/200
+    CI=myfun_CI(array(boost_tensor_res[7,1,],dim=c(116,116)), alpha)
+    if (CI[1]<0 && CI[2]>0) return (alpha)
+  }
+  return (0)
+}
+
+find_p_value_2 <-function(datax,threshold=0){
+  
+  lower=0
+  upper=1
+  
+  for (i in 0:16){
+    CI=myfun_CI(array(boost_tensor_res[7,1,],dim=c(116,116)), (lower+upper)/2)
+    if (CI[1]<0 && CI[2]>0) lower=(upper+lower)/2
+    else upper=(upper+lower)/2
+  }
+  
+  return ((lower+upper)/2)
+}
+
+
+for (a in 1:1000) find_p_value_2(array(boost_tensor_res[7,1,],dim=c(116,116)))
 
 #for (n in 1:250){
 #  if (sum(array(boost_tensor_res[,,n],dim=c(116,116)) - boost_delta_res[[n]]) != 0) print(sum(array(x[,,n],dim=c(116,116)) - boost_delta_res[[n]]))

@@ -261,10 +261,15 @@ for (g in graph_td_list_no_bonferroni){
 
 # we have decided to stick with 12 people in each bootstrap, in order 
 # to maintain lower the variance (ADD THIS COMMENT)
+library(tensorr)
 
 S <- 250
 
 boost_delta_res <- list()
+dims <- c(116,116,250)
+vals <- array(rep(0,116*116*250),dims)
+boost_tensor_res <- dtensor(vals)
+
 for (i in 1:S){
   
   pick_sample_asd <- sample(1:12, 12, replace=T)
@@ -274,7 +279,8 @@ for (i in 1:S){
   boost_asd_cor <- cor(boost_asd)
   boost_td_cor <- cor(boost_td)
   boost_delta <- boost_asd_cor - boost_td_cor
-  boost_delta_res <- append(boost_delta_res, boost_delta)
+  boost_tensor_res[,,i] <- boost_delta
+  boost_delta_res[[i]] <- boost_delta
   if (i%%100 == 0) print(i)
 }
 
@@ -285,6 +291,17 @@ myfun_CI <- function(datax, alpha){
 
 myfun_CI(rnorm(100000,2,1), 0.005)
 
+for (m in 1:3){
+  
+  myfun_CI(array(boost_tensor_res[7,1,],dim=c(116,116)), .68)
+  
+}
+
+#for (n in 1:250){
+#  if (sum(array(boost_tensor_res[,,n],dim=c(116,116)) - boost_delta_res[[n]]) != 0) print(sum(array(x[,,n],dim=c(116,116)) - boost_delta_res[[n]]))
+#}
+
+# array(boost_tensor_res[,,n],dim=c(116,116))
 
 
 

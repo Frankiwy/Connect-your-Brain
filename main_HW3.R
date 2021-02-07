@@ -257,6 +257,35 @@ for (g in graph_td_list_no_bonferroni){
   m=m+1 
 }
 
+############### BONUS ########################
+
+# we have decided to stick with 12 people in each bootstrap, in order 
+# to maintain lower the variance (ADD THIS COMMENT)
+
+S <- 250
+
+boost_delta_res <- list()
+for (i in 1:S){
+  
+  pick_sample_asd <- sample(1:12, 12, replace=T)
+  pick_sample_td <- sample(1:12, 12, replace=T)
+  boost_asd <- do.call(rbind,asd_sel[pick_sample_asd])
+  boost_td <- do.call(rbind,td_sel[pick_sample_td])
+  boost_asd_cor <- cor(boost_asd)
+  boost_td_cor <- cor(boost_td)
+  boost_delta <- boost_asd_cor - boost_td_cor
+  boost_delta_res <- append(boost_delta_res, boost_delta)
+  if (i%%100 == 0) print(i)
+}
+
+myfun_CI <- function(datax, alpha){
+  # quantile 
+  return(quantile(datax, c(alpha/2, 1-alpha/2)))
+}
+
+myfun_CI(rnorm(100000,2,1), 0.005)
+
+
 
 
 

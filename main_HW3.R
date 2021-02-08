@@ -311,7 +311,7 @@ find_p_value_2 <-function(datax){
   lower=0
   upper=1
   
-  for (i in 0:16){
+  for (i in 0:32){
     CI=myfun_CI(datax, (lower+upper)/2)
     if (CI[1]<0 && CI[2]>0) lower=(upper+lower)/2
     else upper=(upper+lower)/2
@@ -321,23 +321,44 @@ find_p_value_2 <-function(datax){
 }
 
 results=rep(0,6670)
+TEST_MATRIX=asd_matrix
+
 
 i=1
+
 for (a in 1:116) {
-  for (b in 1:116){
+  for (b in a:116){
     if (a!=b){
       results[i]=find_p_value_2(array(boost_tensor_res[a,b,],dim=c(116,116)))
-      i=i+1
-    }
+      TEST_MATRIX[a,b]=results[i]
+      TEST_MATRIX[b,a]=results[i]
+      i=i+1}
+    else TEST_MATRIX[a,b]=0
+    
   }
 }
 
-#for (n in 1:250){
-#  if (sum(array(boost_tensor_res[,,n],dim=c(116,116)) - boost_delta_res[[n]]) != 0) print(sum(array(x[,,n],dim=c(116,116)) - boost_delta_res[[n]]))
-#}
+sorted_results=sort(results)
 
-# array(boost_tensor_res[,,n],dim=c(116,116))
+find_j <-function(data,alpha=0.05){
+  t_bon=alpha/length(data)
+  k_max=-1
+  for (k in 1:length(data)){
+    if (data[k]< k*t_bon) k_max=k
+    
+  }
+  return (data[k_max])
+}
 
+t_bh=find_j(sorted_results)
 
-
+for (a in 1:116){
+  for (b in a:116){
+    if (a!=b){
+      if (TEST_MATRIX[a,b]<=t_bh) TEST_MATRIX[a,b]=1
+      
+      else TEST_MATRIX[a,b]=0
+    }
+  }
+}
 

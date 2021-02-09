@@ -263,11 +263,11 @@ for (g in graph_td_list_no_bonferroni){
 # to maintain lower the variance (ADD THIS COMMENT)
 library(tensorr)
 
-S <- 250
+S <- 2500
 
 boost_delta_res <- list()
-dims <- c(116,116,250)
-vals <- array(rep(0,116*116*250),dims)
+dims <- c(116,116,S)
+vals <- array(rep(0,116*116*S),dims)
 boost_tensor_res <- dtensor(vals)
 
 for (i in 1:S){
@@ -289,22 +289,6 @@ myfun_CI <- function(datax, alpha){
   return(quantile(datax, c(alpha/2, 1-alpha/2)))
 }
 
-myfun_CI(rnorm(100000,2,1), 0.005)
-
-for (m in 1:3){
-  
-  myfun_CI(array(boost_tensor_res[7,1,],dim=c(116,116)), .74)
-  
-}
-
-find_p_value <-function(datax,threshold=0){
-  for (i in 0:200){
-    alpha=(200-i)/200
-    CI=myfun_CI(array(boost_tensor_res[7,1,],dim=c(116,116)), alpha)
-    if (CI[1]<0 && CI[2]>0) return (alpha)
-  }
-  return (0)
-}
 
 find_p_value_2 <-function(datax){
   
@@ -321,7 +305,7 @@ find_p_value_2 <-function(datax){
 }
 
 results=rep(0,6670)
-TEST_MATRIX=asd_matrix
+TEST_MATRIX=asd_cor[[1]]
 
 
 i=1
@@ -353,7 +337,7 @@ find_j <-function(data,alpha=0.05){
 t_bh=find_j(sorted_results)
 
 for (a in 1:116){
-  for (b in a:116){
+  for (b in 1:116){
     if (a!=b){
       if (TEST_MATRIX[a,b]<=t_bh) TEST_MATRIX[a,b]=1
       
@@ -361,4 +345,11 @@ for (a in 1:116){
     }
   }
 }
+
+difference_graph<- graph_from_adjacency_matrix(TEST_MATRIX,
+                                           mode = c("undirected")
+                                  )
+
+f_plot(difference_graph,name='differnce_graph.png')
+
 

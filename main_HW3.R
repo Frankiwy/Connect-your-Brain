@@ -350,6 +350,6 @@ difference_graph<- graph_from_adjacency_matrix(TEST_MATRIX,
                                            mode = c("undirected")
                                   )
 
-f_plot(difference_graph,name='differnce_graph.png')
+f_plot(difference_graph,name='difference_graph.png')
 
 

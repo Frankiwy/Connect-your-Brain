@@ -334,7 +334,7 @@ find_j <-function(data,alpha=0.05){
   return (data[k_max])
 }
 
-t_bh=find_j(sorted_results)
+t_bh=find_j(sorted_results,alpha=0.1)
 
 for (a in 1:116){
   for (b in 1:116){

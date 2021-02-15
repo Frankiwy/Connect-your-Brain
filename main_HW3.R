@@ -269,33 +269,59 @@ for (g in graph_td_list_no_bonferroni){
 # to maintain lower the variance (ADD THIS COMMENT)
 
 
-S <- 2500
+S <- 1000
 
-boost_delta_res <- list()
+boots_delta_res <- list()
 dims <- c(116,116,S)
 vals <- array(rep(0,116*116*S),dims)
-boost_tensor_res <- dtensor(vals)
+boots_tensor_res <- dtensor(vals)
 
 for (i in 1:S){
   
-  pick_sample_asd <- sample(1:12, 12, replace=T)
-  pick_sample_td <- sample(1:12, 12, replace=T)
-  boost_asd <- do.call(rbind,asd_sel[pick_sample_asd])
-  boost_td <- do.call(rbind,td_sel[pick_sample_td])
-  boost_asd_cor <- cor(boost_asd)
-  boost_td_cor <- cor(boost_td)
-  boost_delta <- boost_asd_cor - boost_td_cor
-  boost_tensor_res[,,i] <- boost_delta
-  boost_delta_res[[i]] <- boost_delta
+  pick_sample_asd <- sample(1:12, 12, replace=T) #pick a sample of 12 individuals from the asd population
+  pick_sample_td <- sample(1:12, 12, replace=T) #pick a sample of 12 individuals from the td population
+  
+  #We'll now follow the first approach and put the all the data in two 1740x116 matrices.
+  boots_asd <- do.call(rbind,asd_sel[pick_sample_asd])
+  boots_td <- do.call(rbind,td_sel[pick_sample_td])
+  
+  #We calculate the correlation matrix for both the asd and the 
+  boots_asd_cor <- cor(boots_asd)
+  boots_td_cor <- cor(boots_td)
+  boots_delta <- boots_asd_cor - boots_td_cor
+  boots_tensor_res[,,i] <- boots_delta #We store the computed matrix with all the difference as one slice of a tensor.
   if (i%%100 == 0) print(i)
 }
 
+#This function calculates the CI interval
 myfun_CI <- function(datax, alpha){
-  # quantile 
   return(quantile(datax, c(alpha/2, 1-alpha/2)))
 }
 
+find_p_value <-function(datax){
+  data=sort(datax)
+  #The error due to this is negligible for S large enugh
+  data=append(data,-Inf,after=0)
+  data=append(data,Inf,after=length(data))
 
+  if (length(data)%%2==1) {
+    print ("not implemented for odd lenght")
+    return (0)
+  }
+  else {
+    counter=2
+    index_1=length(data)/2
+    index_2=index_1+1
+    while (!(data[index_1]<0 && data[index_2]>0)){
+      index_1=index_1-1
+      index_2=index_2+1
+      }
+    return (1-(index_2-index_1+1)/(length(data)-2))
+    }
+  }
+  
+  
+  
 find_p_value_2 <-function(datax){
   
   lower=0
@@ -319,7 +345,7 @@ i=1
 for (a in 1:116) {
   for (b in a:116){
     if (a!=b){
-      results[i]=find_p_value_2(array(boost_tensor_res[a,b,],dim=S))
+      results[i]=find_p_value_2(array(boots_tensor_res[a,b,],dim=S))
       TEST_MATRIX[a,b]=results[i]
       TEST_MATRIX[b,a]=results[i]
       i=i+1}

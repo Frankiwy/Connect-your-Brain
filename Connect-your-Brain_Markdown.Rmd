@@ -226,7 +226,7 @@ f_plot(graph_td,name='images_td/td_1.png',width_edges = 1)
 
 As explained at the beginning of section 2, now we'll show what happens if we assume independence only in time and so treating each person singularly.
 
-In the code reported below, in asd_cor & td_cor we compute the Pearon correaltion coefficient for each person beloning to each group. Then we aggregate the data and we store them into the asd_matrix & td_matrix and, at the end, we use those two matrices to compute the new 80% threshold. 
+In the code reported below, in asd_cor & td_cor we compute the Pearson correlation coefficient for each person belonging to each group. Then we aggregate the data and we store them into the asd_matrix & td_matrix and, at the end, we use those two matrices to compute the new 80% threshold. 
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 asd_cor = lapply(asd_sel, cor) # list of correlation matrices

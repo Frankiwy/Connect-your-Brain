@@ -53,8 +53,11 @@ Next, the data have been imported and 2 new directories ("images_asd","images_td
 
 load("../Connect-your-Brain/data/hw3_data.RData") # import data
 dir.create("images_asd", showWarnings = TRUE)
+dir.create("images_asd/no_Bonferroni", showWarnings = TRUE)
+dir.create("images_asd/Bonferroni", showWarnings = TRUE)
 dir.create("images_td", showWarnings = TRUE)
-
+dir.create("images_td/no_Bonferroni", showWarnings = TRUE)
+dir.create("images_td/Bonferroni", showWarnings = TRUE)
 ```
  
 Successively, are reported below, some useful function used during the analysis, in particular:
@@ -169,13 +172,22 @@ get_aggregate_graph <- function(list_df,t,bonferroni=TRUE){
 
 # <span style="color: purple;"> 2)  Correlation </span>
 
-In order to build up graphs representing interconnection among different areas of the brain for the population goups (asd and td) it has been decided to follow to different paths:
+In order to build up graphs representing interconnection among different areas of the brain for the population groups (asd and td) it has been decided to follow to different paths:
 
 * first one = we assume that there are only two distributions coming from two different populations (one belonging to asd and another to td), so we will deal with 2 matrices each with 1740x116 as dimension. i.e we assume independence both in time and between people.
 
 * second one = here instead we'll assume independence only in time, and we will treat separately each person and we'll aggregate the data only at the end by returning weighted graphs.
 
-As can be understood by the previous statements, the 80% threshold t, can be obtained in two different ways depending on the approach.
+Since we are using two different approaches we have decided to use two different thresholds. 
+
+* In approach 1:
+  * 
+  *
+  *
+* In approach 2:
+  *
+  *
+  *
 
 ## <span style="color: purple;"> 2.1)  Approach 1 </span>
 
@@ -200,6 +212,7 @@ t_bind_zfisher = zfisher(t_bind) # apply zfisher on threshold
 
 ### <span style="color: purple;"> 2.1.1)  ASD Graph Connections </span>
 
+Here, before finding the adjacency matrix, we perform the z-Fisher Transform on the whole correlation matrix and only then we pass it into the find_edges function to return the adjacency matrix.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 asd_bind_matrix_zfisher_cor = zfisher(asd_bind_cor) # apply zfisher on asd
@@ -207,20 +220,28 @@ asd_bind_matrix_zfisher <- find_edges(asd_bind_matrix_zfisher_cor, 145*12, t_bin
 graph_asd <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher, mode = c("undirected") )
 
 layouts <- layout.davidson.harel(graph_asd) # get general layout. It is necessary in order to make comparisons
-f_plot(graph_asd,name='images_asd/asd_1.png',width_edges = 1)
+f_plot(graph_asd,name='images_asd/Bonferroni/asd_1.png',width_edges = 1)
 ```
-![](images_asd/asd_1.png)
+
+Below is returned the GASD(t) obtained by following the approach 1.
+
+![](images_asd/Bonferroni/asd_1.png)
 
 ### <span style="color: purple;"> 2.1.2)  TD Graph Connections </span>
+
+As performed of the ASD Graph, here we repeat the same steps but on the TD group.
 
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 td_bind_matrix_zfisher_cor = zfisher(td_bind_cor) # apply zfisher on td
 td_bind_matrix_zfisher <- find_edges(td_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher)
 graph_td <- graph_from_adjacency_matrix(td_bind_matrix_zfisher, mode = c("undirected") )
 
-f_plot(graph_td,name='images_td/td_1.png',width_edges = 1)
+f_plot(graph_td,name='images_td/Bonferroni/td_1.png',width_edges = 1)
 ```
-![](images_td/td_1.png)
+
+Below is returned the GTD(t) obtained by following the approach 1.
+
+![](images_td/Bonferroni/td_1.png)
 
 ## <span style="color: purple;"> 2.2)  Approach 2 </span>
 
@@ -246,23 +267,26 @@ t_zfisher = zfisher(t)
 
 ### <span style="color: purple;"> 2.2.1)  ASD Graph Connections </span>
 
-
+Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the GASD(T) as a weighted graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 graph_asd_list <- get_graphs(asd_cor, t_zfisher) #graph per each asd person
 
 # iterate through each graph to store them into .png files
 m=1
 for (g in graph_asd_list){
-  f_plot(g,name=paste("images_asd/asd_2_person_",m,".png",sep=""),width_edges = 1)
+  f_plot(g,name=paste("images_asd/Bonferroni/asd_2_person_",m,".png",sep=""),width_edges = 1)
   m=m+1 
 }
 
 ```
 
-![](images_asd/asd_2_person_1.png) ![](images_asd/asd_2_person_2.png) ![](images_asd/asd_2_person_3.png) ![](images_asd/asd_2_person_4.png)
-![](images_asd/asd_2_person_5.png) ![](images_asd/asd_2_person_6.png)
+Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (asd people). Inside the folder "-----" are stored all the 12 images graphs.
+
+![](images_asd/Bonferroni/asd_2_person_1.png) ![](images_asd/Bonferroni/asd_2_person_2.png) ![](images_asd/Bonferroni/asd_2_person_3.png) ![](images_asd/Bonferroni/asd_2_person_4.png)
+![](images_asd/Bonferroni/asd_2_person_5.png) ![](images_asd/Bonferroni/asd_2_person_6.png)
 
 
+Now that we have computed graphs per each person separately, we can combine them into one weighted graph. The code and the picture below show the obtained graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 # get weighted graph by aggregating the 12 people graphs 
 edges_asd_2 <- get_aggregate_graph(asd_cor, t_zfisher) 
@@ -270,28 +294,32 @@ graph_asd_2 <- graph_from_adjacency_matrix(edges_asd_2,
                                            mode = c("undirected"),
                                            weighted = TRUE)
 
-f_plot(graph_asd_2,name='images_asd/asd_2.png')
+f_plot(graph_asd_2,name='images_asd/Bonferroni/asd_2.png')
 ```
-![](images_asd/asd_2.png)
+![](images_asd/Bonferroni/asd_2.png)
 
 ### <span style="color: purple;"> 2.2.2)  TD Graph Connections </span>
 
-
+Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the GTD(T) as a weighted graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 graph_td_list <- get_graphs(td_cor, t_zfisher) #graph per each td person
 
 m=1
 for (g in graph_td_list){
-  f_plot(g,name=paste("images_td/td_2_person_",m,".png",sep=""),width_edges = 1)
+  f_plot(g,name=paste("images_td/Bonferroni/td_2_person_",m,".png",sep=""),width_edges = 1)
   m=m+1 
 }
 
 ```
 
-![](images_td/td_2_person_1.png) ![](images_td/td_2_person_2.png) ![](images_td/td_2_person_3.png) ![](images_td/td_2_person_4.png)
-![](images_td/td_2_person_5.png) ![](images_td/td_2_person_6.png)
+Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (td people). Inside the folder "-----" are stored all the 12 images graphs.
 
+![](images_td/Bonferroni/td_2_person_1.png) ![](images_td/Bonferroni/td_2_person_2.png) ![](images_td/Bonferroni/td_2_person_3.png) ![](images_td/Bonferroni/td_2_person_4.png)
+![](images_td/Bonferroni/td_2_person_5.png) ![](images_td/Bonferroni/td_2_person_6.png)
+
+
+Now that we have computed graphs per each person separately, we can combine them into one weighted graph. The code and the picture below show the obtained graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 # get weighted graph by aggregating the 12 people graphs
 edges_td_2 <- get_aggregate_graph(td_cor, t_zfisher)
@@ -299,17 +327,103 @@ graph_td_2 <- graph_from_adjacency_matrix(edges_td_2,
                                            mode = c("undirected"),
                                            weighted = TRUE)
 
-f_plot(graph_td_2,name='images_td/td_2.png')
+f_plot(graph_td_2,name='images_td/Bonferroni/td_2.png')
 ```
-![](images_td/td_2.png)
+![](images_td/Bonferroni/td_2.png)
 
 
 # <span style="color: purple;"> 3)  Correlation without Bonferroni </span>
 
+In this section we repeat the same procedures described above (approach 1 and approch2 link) but working with unadjusted intervals (No Bonferroni corrections).
+
+## <span style="color: purple;"> 3.1)  Approach 1 without Bonferroni </span>
+
+Here below is reported the code used to compute the graphs for both asd and td people (following approach 1 link) without applying the Bonferroni correction.
+```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
+
+# NO Bonferroni on ASD people
+asd_bind_matrix_zfisher_no_bonferroni <- find_edges(asd_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher,bonferroni=FALSE ) # compute adjacency matrix
+
+graph_asd_no_bonferroni <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher_no_bonferroni, mode = c("undirected") ) # get graph
+
+f_plot(graph_asd_no_bonferroni,name='images_asd/no_Bonferroni/asd_1_no_bonferroni.png',width_edges = 1) # save image into folder
+
+# NO Bonferroni on TD people
+td_bind_matrix_zfisher_no_bonferroni <- find_edges(td_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher,bonferroni = FALSE) # compute adjacency matrix
+
+graph_td_no_bonferroni <- graph_from_adjacency_matrix(td_bind_matrix_zfisher_no_bonferroni, mode = c("undirected") ) # get graph
+
+f_plot(graph_td_no_bonferroni,name='images_td/no_Bonferroni/td_1_no_bonferroni.png',width_edges = 1) # save image into folder
+
+```
+
+Here is it possible to see the new graphs generated without the Bonferroni correction.
+![](images_asd/no_Bonferroni/asd_1_no_bonferroni.png)![](images_td/no_Bonferroni/td_1_no_bonferroni.png)
+
+## <span style="color: purple;"> 3.2)  Approach 2 without Bonferroni </span>
+
+Here below is reported the code used to compute the graphs for both asd and td ( following the Approach 2(link)) people without applying the Bonferroni correction.
+```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
+
+# Compute singular graphs per each person without Bonferroni correction
+
+#(1) asd people
+
+## (1.1) asd graph per person
+graph_asd_list_no_bonferroni <- get_graphs(asd_cor, t_zfisher, bonferroni = FALSE) #graph per each asd person
+m=1
+for (g in graph_asd_list_no_bonferroni){
+  f_plot(g,name=paste("images_asd/no_Bonferroni/asd_2_person_",m,"_no_bonferroni.png",sep=""),width_edges = 1)
+  m=m+1 
+}
+
+## (1.2) Combine asd graphs
+edges_asd_2_no_bonferroni <- get_aggregate_graph(asd_cor, t_zfisher, bonferroni = FALSE)
+graph_asd_2_no_bonferroni <- graph_from_adjacency_matrix(edges_asd_2_no_bonferroni,
+                                           mode = c("undirected"),
+                                           weighted = TRUE)
+
+f_plot(graph_asd_2_no_bonferroni,name='images_asd/no_Bonferroni/asd_2_no_bonferroni.png')
+
+
+# (2) td people
+
+## (2.1) td graph per each person
+graph_td_list_no_bonferroni <- get_graphs(td_cor, t_zfisher, bonferroni = FALSE) #graph per each td person
+
+m=1
+for (g in graph_td_list_no_bonferroni){
+  f_plot(g,name=paste("images_td/no_Bonferroni/td_2_person_",m,"_no_bonferroni.png",sep=""),width_edges = 1)
+  m=m+1 
+}
+
+## (2.2) Combine td graphs
+
+edges_td_2_no_bonferroni <- get_aggregate_graph(td_cor, t_zfisher, bonferroni=FALSE)
+graph_td_2_no_bonferroni <- graph_from_adjacency_matrix(edges_td_2_no_bonferroni,
+                                          mode = c("undirected"),
+                                          weighted = TRUE)
+
+f_plot(graph_td_2_no_bonferroni,name='images_td/no_Bonferroni/td_2_no_bonferroni.png')
+
+```
+
+Here is it possible to see the new graphs generated without the Bonferroni correction.
+![](images_asd/no_Bonferroni/asd_2_no_bonferroni.png)![](images_td/no_Bonferroni/td_2_no_bonferroni.png)
+
+# <span style="color: purple;"> 4)  RESULTS </span>
+
+## <span style="color: purple;"> 4)  RESULTS </span>
 
 
 
-# <span style="color: purple;"> 4)  BONUS </span>
+
+# <span style="color: purple;"> 5)  BONUS </span>
+
+
+
+
+
 
 
 

@@ -5,7 +5,11 @@ library(igraph)
 library(tensorr)
 load("../Connect-your-Brain/data/hw3_data.RData") # import data
 dir.create("images_asd", showWarnings = TRUE)
+dir.create("images_asd/no_Bonferroni", showWarnings = TRUE)
+dir.create("images_asd/Bonferroni", showWarnings = TRUE)
 dir.create("images_td", showWarnings = TRUE)
+dir.create("images_td/no_Bonferroni", showWarnings = TRUE)
+dir.create("images_td/Bonferroni", showWarnings = TRUE)
 
 
 zfisher <- function(x) 1/2*log((1+x)/(1-x)) # Z-Fisher Transform function
@@ -125,13 +129,13 @@ graph_asd <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher, mode = c("undi
 
 layouts <- layout.davidson.harel(graph_asd) # get general layout
 
-f_plot(graph_asd,name='images_asd/asd_1.png',width_edges = 1)
+f_plot(graph_asd,name='images_asd/Bonferroni/asd_1.png',width_edges = 1)
 
 td_bind_matrix_zfisher_cor = zfisher(td_bind_cor) # apply zfisher on td
 td_bind_matrix_zfisher <- find_edges(td_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher)
 graph_td <- graph_from_adjacency_matrix(td_bind_matrix_zfisher, mode = c("undirected") )
 
-f_plot(graph_td,name='images_td/td_1.png',width_edges = 1)
+f_plot(graph_td,name='images_td/Bonferroni/td_1.png',width_edges = 1)
 
 
 c(length(V(graph_asd)),length(V(graph_td))) # count verteces
@@ -175,14 +179,14 @@ graph_asd_2 <- graph_from_adjacency_matrix(edges_asd_2,
                                            mode = c("undirected"),
                                            weighted = TRUE)
 
-f_plot(graph_asd_2,name='images_asd/asd_2.png')
+f_plot(graph_asd_2,name='images_asd/Bonferroni/asd_2.png')
 
 edges_td_2 <- get_aggregate_graph(td_cor, t_zfisher)
 graph_td_2 <- graph_from_adjacency_matrix(edges_td_2,
                                            mode = c("undirected"),
                                            weighted = TRUE)
 
-f_plot(graph_td_2,name='images_td/td_2.png')
+f_plot(graph_td_2,name='images_td/Bonferroni/td_2.png')
 
 
 graph_asd_list <- get_graphs(asd_cor, t_zfisher) #graph per each asd person
@@ -191,13 +195,13 @@ graph_td_list <- get_graphs(td_cor, t_zfisher) #graph per each td person
 
 m=1
 for (g in graph_asd_list){
-  f_plot(g,name=paste("images_asd/asd_2_person_",m,".png",sep=""),width_edges = 1)
+  f_plot(g,name=paste("images_asd/Bonferroni/asd_2_person_",m,".png",sep=""),width_edges = 1)
   m=m+1 
 }
 
 m=1
 for (g in graph_td_list){
-  f_plot(g,name=paste("images_td/td_2_person_",m,".png",sep=""),width_edges = 1)
+  f_plot(g,name=paste("images_td/Bonferroni/td_2_person_",m,".png",sep=""),width_edges = 1)
   m=m+1 
 }
 
@@ -207,12 +211,12 @@ for (g in graph_td_list){
 
 asd_bind_matrix_zfisher_no_bonferroni <- find_edges(asd_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher,bonferroni=FALSE )
 graph_asd_no_bonferroni <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher_no_bonferroni, mode = c("undirected") )
-f_plot(graph_asd_no_bonferroni,name='images_asd/asd_1_no_bonferroni.png',width_edges = 1)
+f_plot(graph_asd_no_bonferroni,name='images_asd/no_Bonferroni/asd_1_no_bonferroni.png',width_edges = 1)
 
 
 td_bind_matrix_zfisher_no_bonferroni <- find_edges(td_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher,bonferroni = FALSE)
 graph_td_no_bonferroni <- graph_from_adjacency_matrix(td_bind_matrix_zfisher_no_bonferroni, mode = c("undirected") )
-f_plot(graph_td_no_bonferroni,name='images_td/td_1_no_bonferroni.png',width_edges = 1)
+f_plot(graph_td_no_bonferroni,name='images_td/no_Bonferroni/td_1_no_bonferroni.png',width_edges = 1)
 
 sum(asd_bind_matrix_zfisher - asd_bind_matrix_zfisher_no_bonferroni)
 sum(td_bind_matrix_zfisher - td_bind_matrix_zfisher_no_bonferroni)
@@ -220,46 +224,36 @@ sum(td_bind_matrix_zfisher - td_bind_matrix_zfisher_no_bonferroni)
 ######### APPROACH 2 #############
 
 
-edges_asd_2_no_bonferroni <- get_aggregate_graph(asd_cor, t_bind_zfisher, bonferroni = FALSE)
+edges_asd_2_no_bonferroni <- get_aggregate_graph(asd_cor, t_zfisher, bonferroni = FALSE)
 graph_asd_2_no_bonferroni <- graph_from_adjacency_matrix(edges_asd_2_no_bonferroni,
                                            mode = c("undirected"),
                                            weighted = TRUE)
 
-f_plot(graph_asd_2_no_bonferroni,name='images_asd/asd_2_new_no_bonferroni.png')
-
-edges_asd_2 <- get_aggregate_graph(asd_cor, t_bind_zfisher)
-graph_asd_2 <- graph_from_adjacency_matrix(edges_asd_2,
-                                           mode = c("undirected"),
-                                           weighted = TRUE)
-
-f_plot(graph_asd_2,name='images_asd/asd_new_2.png')
+f_plot(graph_asd_2_no_bonferroni,name='images_asd/no_Bonferroni/asd_2_no_bonferroni.png')
 
 
 
-
-
-
-edges_td_2_no_bonferroni <- get_aggregate_graph(td_cor, t_bind_zfisher, bonferroni=FALSE)
+edges_td_2_no_bonferroni <- get_aggregate_graph(td_cor, t_zfisher, bonferroni=FALSE)
 graph_td_2_no_bonferroni <- graph_from_adjacency_matrix(edges_td_2_no_bonferroni,
                                           mode = c("undirected"),
                                           weighted = TRUE)
 
-f_plot(graph_td_2_no_bonferroni,name='images_td/td_2_no_bonferroni.png')
+f_plot(graph_td_2_no_bonferroni,name='images_td/no_Bonferroni/td_2_no_bonferroni.png')
 
 
-graph_asd_list_no_bonferroni <- get_graphs(asd_cor, t_bind_zfisher, bonferroni = FALSE) #graph per each asd person
-graph_td_list_no_bonferroni <- get_graphs(td_cor, t_bind_zfisher, bonferroni = FALSE) #graph per each td person
+graph_asd_list_no_bonferroni <- get_graphs(asd_cor, t_zfisher, bonferroni = FALSE) #graph per each asd person
+graph_td_list_no_bonferroni <- get_graphs(td_cor, t_zfisher, bonferroni = FALSE) #graph per each td person
 
 
 m=1
 for (g in graph_asd_list_no_bonferroni){
-  f_plot(g,name=paste("images_asd/asd_2_person_",m,"_no_bonferroni.png",sep=""),width_edges = 1)
+  f_plot(g,name=paste("images_asd/no_Bonferroni/asd_2_person_",m,"_no_bonferroni.png",sep=""),width_edges = 1)
   m=m+1 
 }
 
 m=1
 for (g in graph_td_list_no_bonferroni){
-  f_plot(g,name=paste("images_td/td_2_person_",m,"_no_bonferroni.png",sep=""),width_edges = 1)
+  f_plot(g,name=paste("images_td/no_Bonferroni/td_2_person_",m,"_no_bonferroni.png",sep=""),width_edges = 1)
   m=m+1 
 }
 

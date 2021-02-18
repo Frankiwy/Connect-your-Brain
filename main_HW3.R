@@ -379,3 +379,29 @@ difference_graph<- graph_from_adjacency_matrix(TEST_MATRIX,
 f_plot(difference_graph,name='difference_graph.png')
 
 
+##############################
+
+gsize(graph_asd)
+gsize(graph_td)
+asd_sum <- 0
+td_sum <- 0
+for (i in 1:12) {
+  asd_sum <- asd_sum + gsize(graph_asd_list[[i]])
+  td_sum <- td_sum + gsize(graph_td_list[[i]])
+}
+
+graph_asd_test <- graph_asd %s% graph_td
+
+f_plot(graph_asd_test,name='images_td/intersection.png')
+
+as_edgelist(graph_asd)
+
+asd_sum
+td_sum
+
+
+
+
+
+edge_attr(graph_asd_2, index =c(8102) )
+

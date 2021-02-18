@@ -45,10 +45,17 @@ As first thing, here are reported the used external libraries to accomplish the 
 set.seed(42)
 library(igraph)
 library(tensorr)
+library(cowplot)
+library(ggplot2)
 ```
 
 
-Next, the data have been imported and 2 new directories ("images_asd","images_td") have been created to store the graph images that will be generated during the code execution.
+Next, the data have been imported and 6 new directories:
+
+*"images_asd","images_asd/Bonferroni","images_asd/no_Bonferroni"
+
+*"images_td","images_td/Bonferroni","images_td/no_Bonferroni" 
+have been created to store the graph images that will be generated during the code execution.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 load("../Connect-your-Brain/data/hw3_data.RData") # import data
@@ -62,26 +69,26 @@ dir.create("images_td/Bonferroni", showWarnings = TRUE)
  
 Successively, are reported below, some useful function used during the analysis, in particular:
 
-* zfisher = compute Z-Fisher Transformation
+* __zfisher__ = compute Z-Fisher Transformation
 
-* CI_function = compute either Bonferreni or not CI and returns 0 if t is inside the CI otherwise 1.
+* __CI_function__ = compute either Bonferreni or not CI and returns 0 if t is inside the CI otherwise 1.
 
-* find_edges = takes in input 4 parameters:
+* __find_edges__ = takes in input 4 parameters:
   * matrix = correlation matrix,
   * N = number of row of the matrix,
   * t = threshold,
   * Bonferroni = boolean value for computing CI using Bonferroni correction or not.
 <br><br>
 
-* f_plot = it is the fuction used to plot and save the graphs. I takes in input 3 parameters:
+* __f_plot__ = it is the fuNction used to plot and save the graphs. I takes in input 3 parameters:
   * g = the graph,
   * name = if a name is given, it saves a .png file for the graph, 
   * width_edges = parameter used to manually change the edge width.
 <br><br>
 
-* get_graphs = the function takes in input a list of correlation matrices a threshold (t) and a boolean parameter to decide if computing the CI with Bonferroni correction or not; it returns a list of adjacency matrices. This function is used when we want to obtain a graph for each person belonging either "Autism Spectrum Disorder (asd)" group or "Typically Developed (td)" group. This function, combined with the f_plot has been used to return images of the singular graphs associated to each person. 
+* __get_graphs__ = the function takes in input a list of correlation matrices a threshold (t) and a boolean parameter to decide if computing the CI with Bonferroni correction or not; it returns a list of adjacency matrices. This function is used when we want to obtain a graph for each person belonging either "Autism Spectrum Disorder (ASD)" group or "Typically Developed (TD)" group. This function, combined with the f_plot has been used to return images of the singular graphs associated to each person. 
 
-* get_aggregate_graph <- the function takes in input a list of correlation matrices, a threshold (t) value and a boolean value to decide if compute the CI using Bonferroni correction or not. The function return a normalized weighted adjacency matrix. 
+* __get_aggregate_graph__ <- the function takes in input a list of correlation matrices, a threshold (t) value and a boolean value to decide if compute the CI using Bonferroni correction or not. The function return a normalized weighted adjacency matrix. 
 
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
@@ -172,24 +179,24 @@ get_aggregate_graph <- function(list_df,t,bonferroni=TRUE){
 
 # <span style="color: purple;"> 2)  Correlation </span>
 
-In order to build up graphs representing interconnection among different areas of the brain for the population groups (asd and td) it has been decided to follow to different paths:
+In order to build up graphs representing interconnection among different areas of the brain for the population groups (ASD and TD) it has been decided to follow to different paths:
 
-* first one = we assume that there are only two distributions coming from two different populations (one belonging to asd and another to td), so we will deal with 2 matrices each with 1740x116 as dimension. i.e we assume independence both in time and between people.
+* __Approach 1__ = we assume that there are only two distributions coming from two different populations (one belonging to ASD and another to TD), so we will deal with 2 matrices each with 1740x116 as dimension. i.e we assume independence both in time and between people.
 
-* second one = here instead we'll assume independence only in time, and we will treat separately each person and we'll aggregate the data only at the end by returning weighted graphs.
+* __Approach 2__ = here instead we'll assume independence only in time, and we will treat separately each person and we'll aggregate the data only at the end by returning weighted graphs.
 
 We decided to use different thresholds t in the two approaches since the underlying assumptions are different.
 
-* In approach 1:
+* __Threshold(t) In approach 1__:
   * We group the data for the 12 people with asd and the 12 td people into two matrices of dimension 1740x116.
   * We compute the correlation matrices and then combine them.
   * We set the threshold as the 80-th percentile value in the combined values.
-* In approach 2:
+* __Threshold(t) In approach 2__:
   * We first compute the correlation matrices for every different person.
   * We now combine all the matrices into a single one.
   * We set the threshold as the 80-th percentile value in the combined values.
 
-## <span style="color: purple;"> 2.1)  Approach 1 </span>
+## <span style="color: purple;"> 2.1)  Approach 1 </span> {#A1}
 
 As explained above, here we make two strong assumptions: independence in time and among people.
 
@@ -223,9 +230,10 @@ layouts <- layout.davidson.harel(graph_asd) # get general layout. It is necessar
 f_plot(graph_asd,name='images_asd/Bonferroni/asd_1.png',width_edges = 1)
 ```
 
-Below is returned the GASD(t) obtained by following the approach 1.
+Below is returned the $\widehat{G}^{ASD}(t)$ obtained by following Approach 1 and applying Bonferroni Correction.
 
-![](images_asd/Bonferroni/asd_1.png)
+![__Figure 1: $\widehat{G}^{ASD}(t)$ (Approach 1 + Bonferroni)__](images_asd/Bonferroni/asd_1.png) 
+
 
 ### <span style="color: purple;"> 2.1.2)  TD Graph Connections </span>
 
@@ -239,11 +247,11 @@ graph_td <- graph_from_adjacency_matrix(td_bind_matrix_zfisher, mode = c("undire
 f_plot(graph_td,name='images_td/Bonferroni/td_1.png',width_edges = 1)
 ```
 
-Below is returned the GTD(t) obtained by following the approach 1.
+Below is returned the $\widehat{G}^{TD}(t)$ returned fallowing Approach 1 and applying Bonferroni Correction.
 
-![](images_td/Bonferroni/td_1.png)
+![__Figure 2: $\widehat{G}^{TD}(t)$ (Approach 1 + Bonferroni)__](images_td/Bonferroni/td_1.png)
 
-## <span style="color: purple;"> 2.2)  Approach 2 </span>
+## <span style="color: purple;"> 2.2)  Approach 2 </span> {#A2}
 
 As explained at the beginning of section 2, now we'll show what happens if we assume independence only in time and so treating each person singularly.
 
@@ -267,7 +275,7 @@ t_zfisher = zfisher(t)
 
 ### <span style="color: purple;"> 2.2.1)  ASD Graph Connections </span>
 
-Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the GASD(T) as a weighted graph.
+Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the $\widehat{G}^{ASD}(t)$ as a weighted graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 graph_asd_list <- get_graphs(asd_cor, t_zfisher) #graph per each asd person
 
@@ -280,11 +288,26 @@ for (g in graph_asd_list){
 
 ```
 
-Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (asd people). Inside the folder "-----" are stored all the 12 images graphs.
+Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (asd people). Following the path "images_asd/Bonferroni/" is possibile to find out all the 12 images graphs refering to each person.
 
-![](images_asd/Bonferroni/asd_2_person_1.png) ![](images_asd/Bonferroni/asd_2_person_2.png) ![](images_asd/Bonferroni/asd_2_person_3.png) ![](images_asd/Bonferroni/asd_2_person_4.png)
-![](images_asd/Bonferroni/asd_2_person_5.png) ![](images_asd/Bonferroni/asd_2_person_6.png)
+```{r include=FALSE, message=FALSE, eval=TRUE, class.source="bg-success", warning=FALSE}
+p1 <- ggdraw() + draw_image("images_asd/asd_2_person_1.jpg", scale = 1)
+p2 <- ggdraw() + draw_image("images_asd/asd_2_person_2.jpg", scale = 1)
+p3 <- ggdraw() + draw_image("images_asd/asd_2_person_3.jpg", scale = 1)
+p4 <- ggdraw() + draw_image("images_asd/asd_2_person_4.jpg", scale = 1)
+```
 
+```{r include=TRUE, message=FALSE, eval=TRUE, class.source="bg-success", warning=FALSE}
+plot_grid(p1, p2)
+```
+
+__Figure 3: $\widehat{g}^{ASD}_1$(Person 1) & $\widehat{g}^{ASD}_2$(Person 2)__
+
+```{r include=TRUE, message=FALSE, eval=TRUE, class.source="bg-success", warning=FALSE}
+plot_grid(p3, p4)
+```
+
+__Figure 4: $\widehat{g}^{ASD}_3$(Person 3) & $\widehat{g}^{ASD}_4$(Person 4)__
 
 Now that we have computed graphs per each person separately, we can combine them into one weighted graph. The code and the picture below show the obtained graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
@@ -296,11 +319,14 @@ graph_asd_2 <- graph_from_adjacency_matrix(edges_asd_2,
 
 f_plot(graph_asd_2,name='images_asd/Bonferroni/asd_2.png')
 ```
-![](images_asd/Bonferroni/asd_2.png)
+
+Below is returned the $\widehat{G}^{ASD}(t)$, fallowing Approach 2, with Bonferroni Correction. 
+
+![__Figure 5: $\widehat{G}^{ASD}(t)$ (Approach 2 + Bonferroni)__](images_asd/Bonferroni/asd_2.png)
 
 ### <span style="color: purple;"> 2.2.2)  TD Graph Connections </span>
 
-Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the GTD(T) as a weighted graph.
+Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the $\widehat{G}^{TD}(t)$  as a weighted graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 graph_td_list <- get_graphs(td_cor, t_zfisher) #graph per each td person
@@ -313,11 +339,28 @@ for (g in graph_td_list){
 
 ```
 
-Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (td people). Inside the folder "-----" are stored all the 12 images graphs.
+Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (TD people). Following the path "images_td/Bonferroni/" is possible to find out all the 12 images graphs refering to each person.
 
-![](images_td/Bonferroni/td_2_person_1.png) ![](images_td/Bonferroni/td_2_person_2.png) ![](images_td/Bonferroni/td_2_person_3.png) ![](images_td/Bonferroni/td_2_person_4.png)
-![](images_td/Bonferroni/td_2_person_5.png) ![](images_td/Bonferroni/td_2_person_6.png)
+```{r include=FALSE, message=FALSE, eval=TRUE, class.source="bg-success", warning=FALSE}
+p1 <- ggdraw() + draw_image("images_td/td_2_person_1.jpg", scale = 1)
+p2 <- ggdraw() + draw_image("images_td/td_2_person_2.jpg", scale = 1)
+p3 <- ggdraw() + draw_image("images_td/td_2_person_3.jpg", scale = 1)
+p4 <- ggdraw() + draw_image("images_td/td_2_person_4.jpg", scale = 1)
+```
 
+
+
+```{r include=TRUE, message=FALSE, eval=TRUE, class.source="bg-success", warning=FALSE}
+plot_grid(p1, p2)
+```
+
+__Figure 6: $\widehat{g}^{TD}_1$(Person 1) & $\widehat{g}^{TD}_2$(Person 2)__
+
+```{r include=TRUE, message=FALSE, eval=TRUE, class.source="bg-success", warning=FALSE}
+plot_grid(p3, p4)
+```
+
+__Figure 7: $\widehat{g}^{TD}_3$(Person 3) & $\widehat{g}^{TD}_4$(Person 4)__
 
 Now that we have computed graphs per each person separately, we can combine them into one weighted graph. The code and the picture below show the obtained graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
@@ -329,16 +372,18 @@ graph_td_2 <- graph_from_adjacency_matrix(edges_td_2,
 
 f_plot(graph_td_2,name='images_td/Bonferroni/td_2.png')
 ```
-![](images_td/Bonferroni/td_2.png)
+
+Below is returned the $\widehat{G}^{TD}(t)$, fallowing Approach 2, with Bonferroni Correction. 
+![__Figure 8: $\widehat{G}^{TD}(t)$ (Approach 2 + Bonferroni)__](images_td/Bonferroni/td_2.png)
 
 
 # <span style="color: purple;"> 3)  Correlation without Bonferroni </span>
 
-In this section we repeat the same procedures described above (approach 1 and approch2 link) but working with unadjusted intervals (No Bonferroni corrections).
+In this section we repeat the same procedures described above ([Approach 1](#A1) and [Approach 2](#A2)) but working with unadjusted intervals (No Bonferroni corrections).
 
 ## <span style="color: purple;"> 3.1)  Approach 1 without Bonferroni </span>
 
-Here below is reported the code used to compute the graphs for both asd and td people (following approach 1 link) without applying the Bonferroni correction.
+Here below is reported the code used to compute the graphs for both ASD and TD people (following [Approach 1](#A1) ) without applying the Bonferroni correction.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 # NO Bonferroni on ASD people
@@ -357,12 +402,15 @@ f_plot(graph_td_no_bonferroni,name='images_td/no_Bonferroni/td_1_no_bonferroni.p
 
 ```
 
-Here is it possible to see the new graphs generated without the Bonferroni correction.
-![](images_asd/no_Bonferroni/asd_1_no_bonferroni.png)![](images_td/no_Bonferroni/td_1_no_bonferroni.png)
+Here is it possible to see the new graphs generated __without__ the Bonferroni correction.
+
+![__Figure 9: $\widehat{G}^{ASD}(t)$, fallowing Approach 1, withOUT Bonferroni Correction__](images_asd/no_Bonferroni/asd_1_no_bonferroni.png)
+
+![__Figure 10: $\widehat{G}^{TD}(t)$, fallowing Approach 1, withOUT Bonferroni Correction__](images_td/no_Bonferroni/td_1_no_bonferroni.png)
 
 ## <span style="color: purple;"> 3.2)  Approach 2 without Bonferroni </span>
 
-Here below is reported the code used to compute the graphs for both asd and td ( following the Approach 2(link)) people without applying the Bonferroni correction.
+Here below is reported the code used to compute the graphs for both ASD and TD ( following the [Approach 2](#A2)) people without applying the Bonferroni correction.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 # Compute singular graphs per each person without Bonferroni correction
@@ -408,13 +456,31 @@ f_plot(graph_td_2_no_bonferroni,name='images_td/no_Bonferroni/td_2_no_bonferroni
 
 ```
 
-Here is it possible to see the new graphs generated without the Bonferroni correction.
-![](images_asd/no_Bonferroni/asd_2_no_bonferroni.png)![](images_td/no_Bonferroni/td_2_no_bonferroni.png)
+Here is it possible to see the new graphs generated __without__ the Bonferroni correction.
+
+![__Figure 11: $\widehat{G}^{ASD}(t)$, fallowing Approach 2, withOUT Bonferroni Correction__](images_asd/no_Bonferroni/asd_2_no_bonferroni.png)
+
+![__Figure 12: $\widehat{G}^{ASD}(t)$, fallowing Approach 2, withOUT Bonferroni Correction__](images_td/no_Bonferroni/td_2_no_bonferroni.png)
 
 # <span style="color: purple;"> 4)  RESULTS </span>
 
-## <span style="color: purple;"> 4)  RESULTS </span>
+Fallowing [Approach 1](#A1) one gets slightly more connections among ROIs in td people (560 edges) compared to the people with asd (474 edges). It is interesting to notice that most of the connections are shared by both. In fact if we do the intersection among the two graphs (\textit{graph_asd %s% graph_td}) it is possible to find out that they share 358 edges.  
 
+Instead, [Approach 1](#A2)  make possible to see that most of the thickest edges (i.e edges most common in each respective population) are present in both graphs. 
+
+#####################
+6002--6001
+2301--2311
+8102--3002
+#######################
+
+As a general note, we want to to point out that having some domain knowledge would help to draw some more robust conclusions. For example, knowing how the data have been collected, if there could be an intrinsic bias in the data collection procedure. Like for example if some ROI are more significant then others. 
+
+
+Regarding the Bonferroni correction we want to point that, as expected, the number of "findings" without applying it, is significantly higher than compared to the graph generated with the multiplicity correction. The reason why using as a Null Hypothesis that rho is inside the interval [-t,t] is useful is that it reduces the number of edges in the graphs.
+
+The Bonferroni correction and all the multiplicity corrections in general are not to get "less" data because it makes it easy to draw conclusions, but they're used to contrast the possibility of making erroneous inferences.
+Moreover, if one "forgets" to apply the correction, then the number of edges is too high to making it hard to draw clear conclusions.
 
 
 

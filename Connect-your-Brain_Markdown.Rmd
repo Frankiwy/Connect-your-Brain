@@ -178,16 +178,16 @@ In order to build up graphs representing interconnection among different areas o
 
 * second one = here instead we'll assume independence only in time, and we will treat separately each person and we'll aggregate the data only at the end by returning weighted graphs.
 
-Since we are using two different approaches we have decided to use two different thresholds. 
+We decided to use different thresholds t in the two approaches since the underlying assumptions are different.
 
 * In approach 1:
-  * 
-  *
-  *
+  * We group the data for the 12 people with asd and the 12 td people into two matrices of dimension 1740x116.
+  * We compute the correlation matrices and then combine them.
+  * We set the threshold as the 80-th percentile value in the combined values.
 * In approach 2:
-  *
-  *
-  *
+  * We first compute the correlation matrices for every different person.
+  * We now combine all the matrices into a single one.
+  * We set the threshold as the 80-th percentile value in the combined values.
 
 ## <span style="color: purple;"> 2.1)  Approach 1 </span>
 

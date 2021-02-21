@@ -113,7 +113,7 @@ asd_bind_matrix_zfisher_cor = zfisher(asd_bind_cor) # apply zfisher on asd
 asd_bind_matrix_zfisher <- find_edges(asd_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher )
 graph_asd <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher, mode = c("undirected") )
 
-layouts <- layout.davidson.harel(graph_asd) # get general layout
+layouts <- layout.circle(graph_asd) # get general layout
 
 f_plot(graph_asd,name='images_asd/Bonferroni/asd_1.png',width_edges = 1)
 

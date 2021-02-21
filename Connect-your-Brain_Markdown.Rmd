@@ -37,7 +37,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 <br><br>
 
-# <span style="color: purple;"> 1)  Load data & Useful functions </span>
+## <span style="color: purple;"> 1)  Load data & Useful functions </span>
 
 
 As first thing, here are reported the used external libraries to accomplish the task.  
@@ -177,7 +177,7 @@ get_aggregate_graph <- function(list_df,t,bonferroni=TRUE){
 
 
 
-# <span style="color: purple;"> 2)  Correlation </span>
+## <span style="color: purple;"> 2)  Correlation </span>
 
 In order to build up graphs representing interconnection among different areas of the brain for the population groups (ASD and TD) it has been decided to follow to different paths:
 
@@ -196,7 +196,7 @@ We decided to use different thresholds t in the two approaches since the underly
   * We now combine all the matrices into a single one.
   * We set the threshold as the 80-th percentile value in the combined values.
 
-## <span style="color: purple;"> 2.1)  Approach 1 </span> {#A1}
+### <span style="color: CornflowerBlue;"> 2.1)  Approach 1 </span> {#A1}
 
 As explained above, here we make two strong assumptions: independence in time and among people.
 
@@ -217,7 +217,7 @@ t_bind_zfisher = zfisher(t_bind) # apply zfisher on threshold
 ```
 
 
-### <span style="color: purple;"> 2.1.1)  ASD Graph Connections </span>
+#### <span style="color: CornflowerBlue;"> 2.1.1)  ASD Graph Connections </span>
 
 Here, before finding the adjacency matrix, we perform the z-Fisher Transform on the whole correlation matrix and only then we pass it into the find_edges function to return the adjacency matrix.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
@@ -235,7 +235,7 @@ Below is returned the $\widehat{G}^{ASD}(t)$ obtained by following Approach 1 an
 ![__Figure 1: $\widehat{G}^{ASD}(t)$ (Approach 1 + Bonferroni)__](images_asd/Bonferroni/asd_1.png) 
 
 
-### <span style="color: purple;"> 2.1.2)  TD Graph Connections </span>
+#### <span style="color: CornflowerBlue;"> 2.1.2)  TD Graph Connections </span>
 
 As performed of the ASD Graph, here we repeat the same steps but on the TD group.
 
@@ -251,7 +251,7 @@ Below is returned the $\widehat{G}^{TD}(t)$ returned fallowing Approach 1 and ap
 
 ![__Figure 2: $\widehat{G}^{TD}(t)$ (Approach 1 + Bonferroni)__](images_td/Bonferroni/td_1.png)
 
-## <span style="color: purple;"> 2.2)  Approach 2 </span> {#A2}
+### <span style="color: CornflowerBlue;"> 2.2)  Approach 2 </span> {#A2}
 
 As explained at the beginning of section 2, now we'll show what happens if we assume independence only in time and so treating each person singularly.
 
@@ -273,7 +273,7 @@ t_zfisher = zfisher(t)
 ```
 
 
-### <span style="color: purple;"> 2.2.1)  ASD Graph Connections </span>
+#### <span style="color: CornflowerBlue;"> 2.2.1)  ASD Graph Connections </span>
 
 Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the $\widehat{G}^{ASD}(t)$ as a weighted graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
@@ -324,7 +324,7 @@ Below is returned the $\widehat{G}^{ASD}(t)$, fallowing Approach 2, with Bonferr
 
 ![__Figure 5: $\widehat{G}^{ASD}(t)$ (Approach 2 + Bonferroni)__](images_asd/Bonferroni/asd_2.png)
 
-### <span style="color: purple;"> 2.2.2)  TD Graph Connections </span>
+#### <span style="color: CornflowerBlue;"> 2.2.2)  TD Graph Connections </span>
 
 Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the $\widehat{G}^{TD}(t)$  as a weighted graph.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
@@ -377,11 +377,11 @@ Below is returned the $\widehat{G}^{TD}(t)$, fallowing Approach 2, with Bonferro
 ![__Figure 8: $\widehat{G}^{TD}(t)$ (Approach 2 + Bonferroni)__](images_td/Bonferroni/td_2.png)
 
 
-# <span style="color: purple;"> 3)  Correlation without Bonferroni </span>
+## <span style="color: purple;"> 3)  Correlation without Bonferroni </span>
 
 In this section we repeat the same procedures described above ([Approach 1](#A1) and [Approach 2](#A2)) but working with unadjusted intervals (No Bonferroni corrections).
 
-## <span style="color: purple;"> 3.1)  Approach 1 without Bonferroni </span>
+### <span style="color: CornflowerBlue;"> 3.1)  Approach 1 without Bonferroni </span>
 
 Here below is reported the code used to compute the graphs for both ASD and TD people (following [Approach 1](#A1) ) without applying the Bonferroni correction.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
@@ -408,7 +408,7 @@ Here is it possible to see the new graphs generated __without__ the Bonferroni c
 
 ![__Figure 10: $\widehat{G}^{TD}(t)$, fallowing Approach 1, withOUT Bonferroni Correction__](images_td/no_Bonferroni/td_1_no_bonferroni.png)
 
-## <span style="color: purple;"> 3.2)  Approach 2 without Bonferroni </span>
+### <span style="color: CornflowerBlue;"> 3.2)  Approach 2 without Bonferroni </span>
 
 Here below is reported the code used to compute the graphs for both ASD and TD ( following the [Approach 2](#A2)) people without applying the Bonferroni correction.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
@@ -462,7 +462,7 @@ Here is it possible to see the new graphs generated __without__ the Bonferroni c
 
 ![__Figure 12: $\widehat{G}^{ASD}(t)$, fallowing Approach 2, withOUT Bonferroni Correction__](images_td/no_Bonferroni/td_2_no_bonferroni.png)
 
-# <span style="color: purple;"> 4)  RESULTS </span>
+## <span style="color: purple;"> 4)  RESULTS </span>
 
 Fallowing [Approach 1](#A1) one gets slightly more connections among ROIs in td people (560 edges) compared to the people with asd (474 edges). It is interesting to notice that most of the connections are shared by both. In fact if we do the intersection among the two graphs (\textit{graph_asd %s% graph_td}) it is possible to find out that they share 358 edges.  
 
@@ -480,11 +480,52 @@ As a general note, we want to to point out that having some domain knowledge wou
 Regarding the Bonferroni correction we want to point that, as expected, the number of "findings" without applying it, is significantly higher than compared to the graph generated with the multiplicity correction. The reason why using as a Null Hypothesis that rho is inside the interval [-t,t] is useful is that it reduces the number of edges in the graphs.
 
 The Bonferroni correction and all the multiplicity corrections in general are not to get "less" data because it makes it easy to draw conclusions, but they're used to contrast the possibility of making erroneous inferences.
-Moreover, if one "forgets" to apply the correction, then the number of edges is too high to making it hard to draw clear conclusions.
+In this case in particular, if one "forgets" to apply the correction, not only one gets incorrect statistical inferences but the stronger connections (that we believe are the most significant) get lost since also too many edges with a weak correlation would be in the graph.
 
 
+## <span style="color: purple;"> 5)  BONUS </span>
 
-# <span style="color: purple;"> 5)  BONUS </span>
+We decided to stick with the Pearson-Correlation-Coefficient. In the bootstrap procedure we build __Percentile__ confidence intervals: 
+
+\[quantile(data, \frac{\alpha}{2}, 1-\frac{\alpha}{2}) \] 
+
+for which we assume the existence of symmetrizing transformation condition.
+
+
+Regarding the threshold (t), since it is arbitrary and it is used to decide what is relevant and what not,  we have seen that setting t =0 still a small number of edges are identified. For that reason we have left it equals to zero. 
+
+### <span style="color: CornflowerBlue;"> 5.1) Practical Bootstrap Implementation </span>
+
+We used a $116*116*S$ tensor(where S is the bootstrap size set equal to 5000), 
+where we stored S difference correlation matrices. The reason why we used a tensor tot store the bootstrap results is that this allowed us to get .
+
+The Non-Parametric bootstrap procedure involves a resampling method from the population (where the population is considered the in-our-hand-data) so, in every $S^{th}$ step, both for ASD and TD groups we picked at random 12 people __with__ replacement. Than, by fallowing [Approach 1](#A1), we computed the Pearson-Correlation-Coefficient for both groups (ASD, TD) and after that the Difference-Correlation is computed ($|\Delta_{jk}| = |\rho_{jk}^{ASD} - \rho_{jk}^{TD}|$). However, since the $\Delta^{ASD-TD}$ Difference-Correlation-Matrix $\in [-2;2]$ we have devided it by 2 in order to have it $\in [-1;1]$. 
+
+```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
+S <- 5000 # bootstrap size
+ 
+dims <- c(116,116,S) #tensor dimension
+vals <- array(rep(0,116*116*S),dims) # pre
+boots_tensor_res <- dtensor(vals)
+
+for (i in 1:S){
+  
+  pick_sample_asd <- sample(1:12, 12, replace=T) #pick a sample of 12 individuals from the asd population
+  pick_sample_td <- sample(1:12, 12, replace=T) #pick a sample of 12 individuals from the td population
+  
+  #We'll now follow the first approach and put the all the data in two 1740x116 matrices.
+  boots_asd <- do.call(rbind,asd_sel[pick_sample_asd])
+  boots_td <- do.call(rbind,td_sel[pick_sample_td])
+  
+  #We calculate the correlation matrix for both the asd and the 
+  boots_asd_cor <- cor(boots_asd)
+  boots_td_cor <- cor(boots_td)
+  boots_delta <- (boots_asd_cor - boots_td_cor)/2 
+  boots_tensor_res[,,i] <- boots_delta #We store the computed matrix with all the difference as one slice of a tensor.
+  if (i%%100 == 0) print(i)
+}
+
+```
 
 
 

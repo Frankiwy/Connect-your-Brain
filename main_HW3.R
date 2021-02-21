@@ -251,7 +251,7 @@ for (g in graph_td_list_no_bonferroni){
 
 S <- 500
 
-boots_delta_res <- list()
+
 dims <- c(116,116,S)
 vals <- array(rep(0,116*116*S),dims)
 boots_tensor_res <- dtensor(vals)
@@ -328,7 +328,11 @@ for (a in 1:116) {
         TEST_MATRIX[a,b]=1
         TEST_MATRIX[b,a]=1
       }
-      else TEST_MATRIX[a,b]=0}
+      else {
+        TEST_MATRIX[a,b]=0
+        TEST_MATRIX[b,a]=0
+      }
+      }
     else TEST_MATRIX[a,b]=0
     
   }

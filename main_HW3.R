@@ -93,20 +93,6 @@ get_aggregate_graph <- function(list_df,t,bonferroni=TRUE){
   return(graph_matrix)
 }
 
-# Point 0 -----------------------------------------------------------------
-
-# let's check t on every patient:
-t_asd <- rep(NA,12)
-t_td <- rep(NA,12)
-for (n in 1:12){
-  
-  asd_cor <- cor(asd_sel[[n]])
-  td_cor <- cor(td_sel[[n]])
-  t_asd[n] <- quantile(abs(asd_cor), probs = c(0.8)) 
-  t_td[n] <- quantile(abs(td_cor), probs = c(0.8)) 
-  
-}
-
 # Point 2 -----------------------------------------------------------------
 
 # APPROACH 1:
@@ -263,7 +249,7 @@ for (g in graph_td_list_no_bonferroni){
 # to maintain lower the variance (ADD THIS COMMENT)
 
 
-S <- 1000
+S <- 500
 
 boots_delta_res <- list()
 dims <- c(116,116,S)
@@ -282,17 +268,18 @@ for (i in 1:S){
   #We calculate the correlation matrix for both the asd and the 
   boots_asd_cor <- cor(boots_asd)
   boots_td_cor <- cor(boots_td)
-  boots_delta <- boots_asd_cor - boots_td_cor
+  boots_delta <- (boots_asd_cor - boots_td_cor)/2 
   boots_tensor_res[,,i] <- boots_delta #We store the computed matrix with all the difference as one slice of a tensor.
   if (i%%100 == 0) print(i)
 }
+
 
 #This function calculates the CI interval
 myfun_CI <- function(datax, alpha){
   return(quantile(datax, c(alpha/2, 1-alpha/2)))
 }
 
-find_p_value <-function(datax){
+#find_p_value <-function(datax){
   data=sort(datax)
   #The error due to this is negligible for S large enugh
   data=append(data,-Inf,after=0)
@@ -316,7 +303,7 @@ find_p_value <-function(datax){
   
   
   
-find_p_value_2 <-function(datax){
+#find_p_value_2 <-function(datax){
   
   lower=0
   upper=1
@@ -330,27 +317,26 @@ find_p_value_2 <-function(datax){
   return ((lower+upper)/2)
 }
 
-results=rep(0,6670)
-TEST_MATRIX=asd_cor[[1]]
 
-
-i=1
+TEST_MATRIX=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
 
 for (a in 1:116) {
   for (b in a:116){
     if (a!=b){
-      results[i]=find_p_value_2(array(boots_tensor_res[a,b,],dim=S))
-      TEST_MATRIX[a,b]=results[i]
-      TEST_MATRIX[b,a]=results[i]
-      i=i+1}
+      intervals=myfun_CI(array(boots_tensor_res[a,b,],dim=S),.05/6670)
+      if (0>= intervals[2] | 0<= intervals[1]){
+        TEST_MATRIX[a,b]=1
+        TEST_MATRIX[b,a]=1
+      }
+      else TEST_MATRIX[a,b]=0}
     else TEST_MATRIX[a,b]=0
     
   }
 }
 
-sorted_results=sort(results)
+#sorted_results=sort(results)
 
-find_j <-function(data,alpha=0.1){
+#find_j <-function(data,alpha=0.1){
   t_bon=alpha/length(data)
   k_max=-1
   for (k in 1:length(data)){
@@ -360,9 +346,9 @@ find_j <-function(data,alpha=0.1){
   return (data[k_max])
 }
 
-t_bh=find_j(sorted_results,alpha=0.1)
+#t_bh=find_j(sorted_results,alpha=0.1)
 
-for (a in 1:116){
+#for (a in 1:116){
   for (b in 1:116){
     if (a!=b){
       if (TEST_MATRIX[a,b]<=t_bh) TEST_MATRIX[a,b]=1
@@ -373,8 +359,7 @@ for (a in 1:116){
 }
 
 difference_graph<- graph_from_adjacency_matrix(TEST_MATRIX,
-                                           mode = c("undirected")
-                                  )
+                                           mode = c("undirected"))
 
 f_plot(difference_graph,name='difference_graph.png')
 

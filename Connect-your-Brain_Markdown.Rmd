@@ -485,28 +485,59 @@ In this case in particular, if one "forgets" to apply the correction, not only o
 
 ## <span style="color: purple;"> 5)  BONUS </span>
 
-We decided to stick with the Pearson-Correlation-Coefficient. In the bootstrap procedure we build __Percentile__ confidence intervals: 
+By looking at the data, we found out that they are very close to the normal distribution (as shown in Figure 13), so we have decided to compute Normal Confidence intervals:
 
-\[quantile(data, \frac{\alpha}{2}, 1-\frac{\alpha}{2}) \] 
+\[CI_{normal} = \widehat{\rho_{n}} \pm z_{\frac{\alpha}{2}}*\widehat{se_{boot}} \] 
 
-for which we assume the existence of symmetrizing transformation condition.
+![____](images_bootstrap/Difference_distribution.png)
+Below is reported the code used to plot Figure 13:
+```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
+png(filename='images_bootstrap/Difference_distribution.png', width = 1000, height = 600) # open image
+par(mfrow = c(2, 3))
+for (i in 100:105){
+  if (i!=105){
+  y <- array(boots_tensor_res[1,i+1,])
+  hist(y, freq=FALSE, col = 'CornflowerBlue', ylim = c(0,max(density(y)$y)+1),
+       main = bquote(paste('Distribution of ROI'[1],' and ROI',''[.(i+1)] )),
+       font.main=4,
+       xlab = 'Correlation Values',
+       cex.lab=1.7,
+       cex.axis=1.5,
+       cex.main=2)
+  curve(dnorm(x,mean=mean(y),sd=sd(y)), add=TRUE,col="red", lwd=3)
+  lines(density(y),col='green', lwd=3, lty=3)
+  }
+  else{
+    plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
+    legend("center", legend=c("Normal Distribution", "Actual Distribution"),
+           col=c("red", "green"), lty=2:3, pt.cex=5, cex=2.5, bty='o')
+  }
+}
+dev.off() # close and save image
 
+```
+
+
+We realized that, even if we use a threshold t=0, by using the normal confidence intervals we get few edges in the difference graph. Since after the Bonferroni correction, extreme values become relevant and tails of the distributions are not well approximated by the Gaussian, we also computed Percentile Confidence Itervals to compute the difference graph.
+
+\[CI_{percentile} = quantile(data, \frac{\alpha}{2}, 1-\frac{\alpha}{2}) \] 
 
 Regarding the threshold (t), since it is arbitrary and it is used to decide what is relevant and what not,  we have seen that setting t =0 still a small number of edges are identified. For that reason we have left it equals to zero. 
 
 ### <span style="color: CornflowerBlue;"> 5.1) Practical Bootstrap Implementation </span>
 
 We used a $116*116*S$ tensor(where S is the bootstrap size set equal to 5000), 
-where we stored S difference correlation matrices. The reason why we used a tensor tot store the bootstrap results is that this allowed us to get .
+where we stored S difference correlation matrices. The reason why we used a tensor tot store the bootstrap results is that this allowed us easy get all the values that the bootstrap produced for an entry of the correlation matrix.
 
-The Non-Parametric bootstrap procedure involves a resampling method from the population (where the population is considered the in-our-hand-data) so, in every $S^{th}$ step, both for ASD and TD groups we picked at random 12 people __with__ replacement. Than, by fallowing [Approach 1](#A1), we computed the Pearson-Correlation-Coefficient for both groups (ASD, TD) and after that the Difference-Correlation is computed ($|\Delta_{jk}| = |\rho_{jk}^{ASD} - \rho_{jk}^{TD}|$). However, since the $\Delta^{ASD-TD}$ Difference-Correlation-Matrix $\in [-2;2]$ we have devided it by 2 in order to have it $\in [-1;1]$. 
+The Non-Parametric bootstrap procedure involves a resampling method from the population (where the population is considered the in-our-hand-data) so, in every $s^{th}$ step, both for ASD and TD groups we picked at random 12 people __with__ replacement. Then, by following [Approach 1](#A1), we computed the Pearson-Correlation-Coefficient for both groups (ASD, TD) and after that the Difference-Correlation is computed ($|\Delta_{jk}| = |\rho_{jk}^{ASD} - \rho_{jk}^{TD}|$). 
 
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 S <- 5000 # bootstrap size
- 
+
+difference_matrix <- asd_bind_cor - td_bind_cor  # point-estimate of diff. matrix
 dims <- c(116,116,S) #tensor dimension
 vals <- array(rep(0,116*116*S),dims) # pre
-boots_tensor_res <- dtensor(vals)
+boots_tensor_res <- dtensor(vals) # tensor where we store bootstrap results
 
 for (i in 1:S){
   
@@ -524,14 +555,77 @@ for (i in 1:S){
   boots_tensor_res[,,i] <- boots_delta #We store the computed matrix with all the difference as one slice of a tensor.
   if (i%%100 == 0) print(i)
 }
+```
+
+
+Below the code used to compute the Normal and Percentile Confidence Intervals:
+
+```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
+
+#This function calculates the Percentile CI interval
+percentile_CI <- function(datax, alpha,point_estimate){
+  # here the point_estimate has been inserted in order to avoid an if statement
+  # in the diff_matrix function
+  return(quantile(datax, c(alpha/2, 1-alpha/2)))
+}
+
+
+#This function calculates the Normal CI interval
+normal_CI <-function(datax,alpha,point_estimate){
+  z <- qnorm(1-alpha/2)
+  rho <- point_estimate
+  se <- sqrt(var(datax))
+  intervals <- c(rho - z*se, rho + z*se)
+  return(intervals)
+}
+
+
+TEST_MATRIX_percentile=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
+
+diff_matrix <- function(interval.function){
+  TEST_MATRIX=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
+  for (a in 1:116) {
+    for (b in a:116){
+      if (a!=b){
+        intervals=interval.function(array(boots_tensor_res[a,b,],dim=S),
+                                    .05/choose(116,2),
+                                    point_estimate=difference_matrix[a,b]) # compute intervals
+        if (0>= intervals[2] | 0<= intervals[1]){
+          #if zero is not in the interval put 1 in the matrix
+          TEST_MATRIX[a,b]=1
+          TEST_MATRIX[b,a]=1 
+        }
+        else {#if zero is in the interval put 0 in the matrix
+          TEST_MATRIX[a,b]=0
+          TEST_MATRIX[b,a]=0
+        }
+        }
+      else TEST_MATRIX[a,b]=0 # put zero on the diagonal
+      
+    }
+  }
+  return(TEST_MATRIX) #return edge matrix
+}
+
+
+# compute difference graph using Normal CI
+difference_graph_percentile<- graph_from_adjacency_matrix(diff_matrix(percentile_CI),
+                                           mode = c("undirected"))
+# compute difference graph using Percentile CI
+difference_graph_normal<- graph_from_adjacency_matrix(diff_matrix(normal_CI),
+                                               mode = c("undirected"))
+# save Normal graph
+f_plot(difference_graph_percentile,name='difference_graph_percentile.png')
+# save Percentile graph
+f_plot(difference_graph_normal,name='difference_graph_normal.png')
 
 ```
 
 
+![__Figure 14: $G^{\Delta}(t)$, using Normal CI__](images_bootstrap/difference_graph_normal.png)
 
 
-
-
+![__Figure 15: $G^{\Delta}(t)$, using Percentile CI__](images_bootstrap/difference_graph_percentile.png)
 
 
 

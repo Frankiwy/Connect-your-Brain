@@ -10,7 +10,7 @@ dir.create("images_asd/Bonferroni", showWarnings = TRUE)
 dir.create("images_td", showWarnings = TRUE)
 dir.create("images_td/no_Bonferroni", showWarnings = TRUE)
 dir.create("images_td/Bonferroni", showWarnings = TRUE)
-
+dir.create("images_bootstrap", showWarnings = TRUE)
 
 zfisher <- function(x) 1/2*log((1+x)/(1-x)) # Z-Fisher Transform function
 
@@ -251,7 +251,7 @@ for (g in graph_td_list_no_bonferroni){
 
 S <- 500
 
-
+difference_matrix <- asd_bind_cor - td_bind_cor
 dims <- c(116,116,S)
 vals <- array(rep(0,116*116*S),dims)
 boots_tensor_res <- dtensor(vals)
@@ -268,106 +268,95 @@ for (i in 1:S){
   #We calculate the correlation matrix for both the asd and the 
   boots_asd_cor <- cor(boots_asd)
   boots_td_cor <- cor(boots_td)
-  boots_delta <- (boots_asd_cor - boots_td_cor)/2 
+  boots_delta <- boots_asd_cor - boots_td_cor 
   boots_tensor_res[,,i] <- boots_delta #We store the computed matrix with all the difference as one slice of a tensor.
   if (i%%100 == 0) print(i)
 }
 
+png(filename='images_bootstrap/Difference_distribution.png', width = 1000, height = 600) # open image
+par(mfrow = c(2, 3))
+for (i in 100:105){
+  if (i!=105){
+  y <- array(boots_tensor_res[1,i+1,])
+  hist(y, freq=FALSE, col = 'CornflowerBlue', ylim = c(0,max(density(y)$y)+1),
+       main = bquote(paste('Distribution of ROI'[1],' and ROI',''[.(i+1)] )),
+       font.main=4,
+       xlab = 'Correlation Values',
+       cex.lab=1.7,
+       cex.axis=1.5,
+       cex.main=2)
+  curve(dnorm(x,mean=mean(y),sd=sd(y)), add=TRUE,col="red", lwd=3)
+  lines(density(y),col='green', lwd=3, lty=3)
+  }
+  else{
+    plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
+    legend("center", legend=c("Normal Distribution", "Actual Distribution"),
+           col=c("red", "green"), lty=2:3, pt.cex=5, cex=2.5, bty='o')
+  }
+}
+dev.off() # close and save image
 
-#This function calculates the CI interval
-myfun_CI <- function(datax, alpha){
+#This function calculates the Percentile CI interval
+percentile_CI <- function(datax, alpha,point_estimate){
+  # here the point_estimate has been inserted in order to avoid an if statement
+  # in the diff_matrix function
   return(quantile(datax, c(alpha/2, 1-alpha/2)))
 }
 
-#find_p_value <-function(datax){
-  data=sort(datax)
-  #The error due to this is negligible for S large enugh
-  data=append(data,-Inf,after=0)
-  data=append(data,Inf,after=length(data))
 
-  if (length(data)%%2==1) {
-    print ("not implemented for odd lenght")
-    return (0)
-  }
-  else {
-    counter=2
-    index_1=length(data)/2
-    index_2=index_1+1
-    while (!(data[index_1]<0 && data[index_2]>0)){
-      index_1=index_1-1
-      index_2=index_2+1
-      }
-    return (1-(index_2-index_1+1)/(length(data)-2))
-    }
-  }
-  
-  
-  
-#find_p_value_2 <-function(datax){
-  
-  lower=0
-  upper=1
-  
-  for (i in 0:32){
-    CI=myfun_CI(datax, (lower+upper)/2)
-    if (CI[1]<0 && CI[2]>0) lower=(upper+lower)/2
-    else upper=(upper+lower)/2
-  }
-  
-  return ((lower+upper)/2)
+#This function calculates the Normal CI interval
+normal_CI <-function(datax,alpha,point_estimate){
+  z <- qnorm(1-alpha/2)
+  rho <- point_estimate
+  se <- sqrt(var(datax))
+  intervals <- c(rho - z*se, rho + z*se)
+  return(intervals)
 }
 
 
-TEST_MATRIX=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
+TEST_MATRIX_percentile=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
 
-for (a in 1:116) {
-  for (b in a:116){
-    if (a!=b){
-      intervals=myfun_CI(array(boots_tensor_res[a,b,],dim=S),.05/6670)
-      if (0>= intervals[2] | 0<= intervals[1]){
-        TEST_MATRIX[a,b]=1
-        TEST_MATRIX[b,a]=1
+diff_matrix <- function(interval.function){
+  TEST_MATRIX=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
+  for (a in 1:116) {
+    for (b in a:116){
+      if (a!=b){
+        intervals=interval.function(array(boots_tensor_res[a,b,],dim=S),
+                                    .05/choose(116,2),
+                                    point_estimate=difference_matrix[a,b]) # compute intervals
+        if (0>= intervals[2] | 0<= intervals[1]){
+          #if zero is not in the interval put 1 in the matrix
+          TEST_MATRIX[a,b]=1
+          TEST_MATRIX[b,a]=1 
+        }
+        else {#if zero is in the interval put 0 in the matrix
+          TEST_MATRIX[a,b]=0
+          TEST_MATRIX[b,a]=0
+        }
       }
-      else {
-        TEST_MATRIX[a,b]=0
-        TEST_MATRIX[b,a]=0
-      }
-      }
-    else TEST_MATRIX[a,b]=0
-    
-  }
-}
-
-#sorted_results=sort(results)
-
-#find_j <-function(data,alpha=0.1){
-  t_bon=alpha/length(data)
-  k_max=-1
-  for (k in 1:length(data)){
-    if (data[k]< k*t_bon) k_max=k
-    
-  }
-  return (data[k_max])
-}
-
-#t_bh=find_j(sorted_results,alpha=0.1)
-
-#for (a in 1:116){
-  for (b in 1:116){
-    if (a!=b){
-      if (TEST_MATRIX[a,b]<=t_bh) TEST_MATRIX[a,b]=1
+      else TEST_MATRIX[a,b]=0 # put zero on the diagonal
       
-      else TEST_MATRIX[a,b]=0
     }
   }
+  return(TEST_MATRIX) #return edge matrix
 }
 
-difference_graph<- graph_from_adjacency_matrix(TEST_MATRIX,
-                                           mode = c("undirected"))
 
-f_plot(difference_graph,name='difference_graph.png')
+# compute difference graph using Normal CI
+difference_graph_percentile<- graph_from_adjacency_matrix(diff_matrix(percentile_CI),
+                                                          mode = c("undirected"))
+# compute difference graph using Percentile CI
+difference_graph_normal<- graph_from_adjacency_matrix(diff_matrix(normal_CI),
+                                                      mode = c("undirected"))
+# save Normal graph
+f_plot(difference_graph_percentile,name='images_bootstrap/difference_graph_percentile.png')
+# save Percentile graph
+f_plot(difference_graph_normal,name='images_bootstrap/difference_graph_normal.png')
 
 
+
+
+sum(diff_matrix(normal_CI))/2
 ##############################
 
 gsize(graph_asd)

@@ -376,6 +376,7 @@ f_plot(graph_td_2,name='images_td/Bonferroni/td_2.png')
 ```
 
 Below is returned the $\widehat{G}^{TD}(t)$, fallowing Approach 2, with Bonferroni Correction. 
+
 ![__Figure 8: $\widehat{G}^{TD}(t)$ (Approach 2 + Bonferroni)__](images_td/Bonferroni/td_2.png)
 
 
@@ -462,7 +463,7 @@ Here is it possible to see the new graphs generated __without__ the Bonferroni c
 
 ![__Figure 11: $\widehat{G}^{ASD}(t)$, fallowing Approach 2, withOUT Bonferroni Correction__](images_asd/no_Bonferroni/asd_2_no_bonferroni.png)
 
-![__Figure 12: $\widehat{G}^{ASD}(t)$, fallowing Approach 2, withOUT Bonferroni Correction__](images_td/no_Bonferroni/td_2_no_bonferroni.png)
+![__Figure 12: $\widehat{G}^{TD}(t)$, fallowing Approach 2, withOUT Bonferroni Correction__](images_td/no_Bonferroni/td_2_no_bonferroni.png)
 
 ## <span style="color: purple;"> 4)  RESULTS </span>
 

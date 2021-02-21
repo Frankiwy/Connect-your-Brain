@@ -93,7 +93,7 @@ get_aggregate_graph <- function(list_df,t,bonferroni=TRUE){
   return(graph_matrix)
 }
 
-# Point 2 -----------------------------------------------------------------
+# Point 2.1  WITH BONFERRONI--------------------------------------------------------
 
 # APPROACH 1:
 
@@ -131,17 +131,12 @@ plot(degree_distribution(graph_td, cumulative = TRUE), main='td', ylab='density 
 
 asd_eigen_centrality = eigen_centrality(graph_asd)
 plot(sort(asd_eigen_centrality$vector), main='asd', ylab = 'asd centrality')
-#asd_betweenness <- betweenness(graph_asd)
-#plot(sort(asd_betweenness), main='asd', ylab='asd betweenness')
+
 td_eigen_centrality = eigen_centrality(graph_td)
 plot(sort(td_eigen_centrality$vector), main='td', ylab='td centrality')
-#td_betweenness <- betweenness(graph_td)
-#plot(sort(td_betweenness), ylim = c(0,50))
 
-#write_graph(graph_asd, "graph_asd.txt", format = c("edgelist"))
-#write_graph(graph_td, "graph_td.txt", format = c("edgelist"))
 
-######################### APPRACH 2 ###########################
+# APPRACH 2 :
 
 asd_cor = lapply(asd_sel, cor) # list of correlation matrices
 td_cor = lapply(td_sel, cor) # list of correlation matrices
@@ -193,8 +188,9 @@ for (g in graph_td_list){
 
 
 
-# part 1 & 2 without Bonferroni Correction --------------------------------
+# Point 2.2  WITHOUT BONFERRONI--------------------------------------------------------
 
+# APPROACH 1:
 asd_bind_matrix_zfisher_no_bonferroni <- find_edges(asd_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher,bonferroni=FALSE )
 graph_asd_no_bonferroni <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher_no_bonferroni, mode = c("undirected") )
 f_plot(graph_asd_no_bonferroni,name='images_asd/no_Bonferroni/asd_1_no_bonferroni.png',width_edges = 1)
@@ -207,8 +203,7 @@ f_plot(graph_td_no_bonferroni,name='images_td/no_Bonferroni/td_1_no_bonferroni.p
 sum(asd_bind_matrix_zfisher - asd_bind_matrix_zfisher_no_bonferroni)
 sum(td_bind_matrix_zfisher - td_bind_matrix_zfisher_no_bonferroni)
 
-######### APPROACH 2 #############
-
+# APPROACH 2:
 
 edges_asd_2_no_bonferroni <- get_aggregate_graph(asd_cor, t_zfisher, bonferroni = FALSE)
 graph_asd_2_no_bonferroni <- graph_from_adjacency_matrix(edges_asd_2_no_bonferroni,
@@ -243,7 +238,8 @@ for (g in graph_td_list_no_bonferroni){
   m=m+1 
 }
 
-############### BONUS ########################
+# Point 3  BONUS ---------------------------------------------------------------
+
 
 # we have decided to stick with 12 people in each bootstrap, in order 
 # to maintain lower the variance (ADD THIS COMMENT)

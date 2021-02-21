@@ -256,6 +256,8 @@ Below is returned the $\widehat{G}^{TD}(t)$ returned fallowing Approach 1 and ap
 As explained at the beginning of section 2, now we'll show what happens if we assume independence only in time and so treating each person singularly.
 
 In the code reported below, in asd_cor & td_cor we compute the Pearson correlation coefficient for each person belonging to each group. Then we aggregate the data and we store them into the asd_matrix & td_matrix and, at the end, we use those two matrices to compute the new 80% threshold. 
+
+We actually consider this approach more appropriate because the data coming "caltech" seems to be on a different scales compared to the one coming from "trinity". 
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 asd_cor = lapply(asd_sel, cor) # list of correlation matrices
@@ -485,11 +487,17 @@ In this case in particular, if one "forgets" to apply the correction, not only o
 
 ## <span style="color: purple;"> 5)  BONUS </span>
 
-By looking at the data, we found out that they are very close to the normal distribution (as shown in Figure 13), so we have decided to compute Normal Confidence intervals:
+In order to implement the bootstrapping procedure, we have decided to follow [Approach 1](#A1) to make it simpler to frame the problem. 
+
+By looking at the data, we found out that they are very close to the normal distribution (as shown in Figure 13), so we have decided to compute Normal Confidence intervals. Every plot represents an example of the Correlation difference between two ROIs (ROIs are numbered from 1 to 116). In red the normal distribution with mean and standard deviation equal to the mean and the standard deviation of the difference correlation data(ex.:$mean(\Delta_{1,106})$, $sd(\Delta_{1,106})$), whereas the green curve is the actual density from the bootstrap. 
 
 \[CI_{normal} = \widehat{\rho_{n}} \pm z_{\frac{\alpha}{2}}*\widehat{se_{boot}} \] 
 
 ![__Figure 13: Check Normality Condition__](images_bootstrap/Difference_distribution.png)
+
+In Figure 13
+
+
 Below is reported the code used to plot Figure 13:
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 png(filename='images_bootstrap/Difference_distribution.png', width = 1000, height = 600) # open image

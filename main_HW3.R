@@ -355,6 +355,7 @@ f_plot(difference_graph_normal,name='images_bootstrap/difference_graph_normal.pn
 sum(diff_matrix(normal_CI))/2
 ##############################
 
+
 gsize(graph_asd)
 gsize(graph_td)
 asd_sum <- 0

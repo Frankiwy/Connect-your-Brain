@@ -47,15 +47,20 @@ library(igraph)
 library(tensorr)
 library(cowplot)
 library(ggplot2)
+library(emo)
 ```
 
 
-Next, the data have been imported and 6 new directories:
+Next, the data have been imported and 7 new directories:
 
-*"images_asd","images_asd/Bonferroni","images_asd/no_Bonferroni"
+* for ASD: __images_asd__, __images_asd/Bonferroni__, __images_asd/no_Bonferroni__,
 
-*"images_td","images_td/Bonferroni","images_td/no_Bonferroni" 
-have been created to store the graph images that will be generated during the code execution.
+* for TD: __images_td__, __images_td/Bonferroni__, __images_td/no_Bonferroni__,
+
+* for Bootstarp: __images_bootstrap__.
+
+have been created to store the graph images that will be generated during the code execution. Differences between graphs are easier to spot in the higher resolution images available in each specific folder.
+
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 load("../Connect-your-Brain/data/hw3_data.RData") # import data
@@ -65,30 +70,31 @@ dir.create("images_asd/Bonferroni", showWarnings = TRUE)
 dir.create("images_td", showWarnings = TRUE)
 dir.create("images_td/no_Bonferroni", showWarnings = TRUE)
 dir.create("images_td/Bonferroni", showWarnings = TRUE)
+dir.create("images_bootstrap", showWarnings = TRUE)
 ```
  
 Successively, are reported below, some useful function used during the analysis, in particular:
 
-* __zfisher__ = compute Z-Fisher Transformation
+* __zfisher__ = computes Z-Fisher Transformation
 
-* __CI_function__ = compute either Bonferreni or not CI and returns 0 if t is inside the CI otherwise 1.
+* __CI_function__ = computes CI with or withOUT Bonferroni Correction and returns 0 if $t$ is inside the CI, otherwise it returns 1.
 
-* __find_edges__ = takes in input 4 parameters:
+* __find_edges__ = is the function that computes the adjacency matrix of the given correlation matrix. It takes in input 4 parameters:
   * matrix = correlation matrix,
   * N = number of row of the matrix,
   * t = threshold,
   * Bonferroni = boolean value for computing CI using Bonferroni correction or not.
 <br><br>
 
-* __f_plot__ = it is the fuNction used to plot and save the graphs. I takes in input 3 parameters:
+* __f_plot__ = it is the function used to plot and save the graphs. It takes in input 3 parameters:
   * g = the graph,
   * name = if a name is given, it saves a .png file for the graph, 
   * width_edges = parameter used to manually change the edge width.
 <br><br>
 
-* __get_graphs__ = the function takes in input a list of correlation matrices a threshold (t) and a boolean parameter to decide if computing the CI with Bonferroni correction or not; it returns a list of adjacency matrices. This function is used when we want to obtain a graph for each person belonging either "Autism Spectrum Disorder (ASD)" group or "Typically Developed (TD)" group. This function, combined with the f_plot has been used to return images of the singular graphs associated to each person. 
+* __get_graphs__ = the function takes in input a list of correlation matrices, a threshold ($t$) and a boolean parameter to decide if computing the CI with Bonferroni correction or not; it returns a list of adjacency matrices. This function is used when we want to obtain a graph for each person belonging either "Autism Spectrum Disorder (ASD)" group or "Typically Developed (TD)" group. This function, combined with the __f_plot__ has been used to return images of the singular graphs associated to each person. 
 
-* __get_aggregate_graph__ <- the function takes in input a list of correlation matrices, a threshold (t) value and a boolean value to decide if compute the CI using Bonferroni correction or not. The function return a normalized weighted adjacency matrix. 
+* __get_aggregate_graph__ = the function takes in input a list of correlation matrices, a threshold ($t$) value and a boolean value to decide if compute the CI using Bonferroni correction or not. The function return a normalized weighted adjacency matrix. 
 
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
@@ -177,30 +183,35 @@ get_aggregate_graph <- function(list_df,t,bonferroni=TRUE){
 
 
 
-## <span style="color: purple;"> 2)  Correlation </span>
+## <span style="color: purple;"> 2) Pearson Correlation Graphs </span> {#PCG}
 
-In order to build up graphs representing interconnection among different areas of the brain for the population groups (ASD and TD) it has been decided to follow to different paths:
+In order to build up graphs representing interconnection among different areas of the brain for the population groups (ASD and TD), it has been decided to follow to different paths:
 
 * __Approach 1__ = we assume that there are only two distributions coming from two different populations (one belonging to ASD and another to TD), so we will deal with 2 matrices each with 1740x116 as dimension. i.e we assume independence both in time and between people.
 
 * __Approach 2__ = here instead we'll assume independence only in time, and we will treat separately each person and we'll aggregate the data only at the end by returning weighted graphs.
 
-We decided to use different thresholds t in the two approaches since the underlying assumptions are different.
+Although, it is important to highlight that data labeled "caltech" seems to be on a different scale compared to the one labeled "trinity". This suggests that Approach 2 should be more appropriate since it treats every data observation (i.e each per person) separately. 
 
-* __Threshold(t) In approach 1__:
-  * We group the data for the 12 people with asd and the 12 td people into two matrices of dimension 1740x116.
+We decided to use different thresholds $t$ in the two approaches since the underlying assumptions are different.
+
+* __Threshold ($t$) In approach 1__:
+  * We group the data for the 12 ASD and the 12 TD people into two matrices of dimension 1740x116.
   * We compute the correlation matrices and then combine them.
   * We set the threshold as the 80-th percentile value in the combined values.
-* __Threshold(t) In approach 2__:
+* __Threshold ($t$) In approach 2__:
   * We first compute the correlation matrices for every different person.
-  * We now combine all the matrices into a single one.
+  * We combine all the matrices into a single one.
   * We set the threshold as the 80-th percentile value in the combined values.
+
+In order to make comparisons among different graphs and different approaches, all the graphs have been plotted using the same layout and node coordinates. This it has been possible since the layout and node coordinates has been set by using the __layout.circle()__ function implemented in the __igraph__ library. 
+
 
 ### <span style="color: CornflowerBlue;"> 2.1)  Approach 1 </span> {#A1}
 
 As explained above, here we make two strong assumptions: independence in time and among people.
 
-In the code below, in asd_bind & td_bind we aggregate all the the data and then we compute the correlation among each region of the brain (116 regions). Then we aggregate the two obtained correlation matrices to compute the desired 80% threshold. 
+In the code below, the **asd_bind** and **td_bind** matrices contains all the aggregated data belonging to each group. Then, from these two matrices, the Pearson Correlation Coefficient among each ROI (116 regions) is computed and **asd_bind_cor** and **td_bind_cor** respectively have been returned. At the end, these two matrices have been aggregated to compute the desired 80% threshold. 
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 asd_bind = do.call(rbind, asd_sel) # aggregate asd data
@@ -219,14 +230,15 @@ t_bind_zfisher = zfisher(t_bind) # apply zfisher on threshold
 
 #### <span style="color: CornflowerBlue;"> 2.1.1)  ASD Graph Connections </span>
 
-Here, before finding the adjacency matrix, we perform the z-Fisher Transform on the whole correlation matrix and only then we pass it into the find_edges function to return the adjacency matrix.
+Here, since we are under Approach 1, we worked with all the observations already combined. In fact, the **asd_bind_matrix_zfisher_cor** is Z-Fisher-Transformed correlation matrix coming from the **asd_bind_cor** matrix that consists on a Pearson-Correlation matrix of all the people under the ASD group. Once the transoformation is applied the **asd_bind_matrix_zfisher_cor** is passed through the **find_edges** function that returns the adjacency matrix of the $\widehat{G}^{ASD}(t)$.
+
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 asd_bind_matrix_zfisher_cor = zfisher(asd_bind_cor) # apply zfisher on asd
 asd_bind_matrix_zfisher <- find_edges(asd_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher )
 graph_asd <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher, mode = c("undirected") )
 
-layouts <- layout.davidson.harel(graph_asd) # get general layout. It is necessary in order to make comparisons
+layouts <- layout.circle(graph_asd) # get general layout. It is necessary in order to make comparisons
 f_plot(graph_asd,name='images_asd/Bonferroni/asd_1.png',width_edges = 1)
 ```
 
@@ -247,17 +259,18 @@ graph_td <- graph_from_adjacency_matrix(td_bind_matrix_zfisher, mode = c("undire
 f_plot(graph_td,name='images_td/Bonferroni/td_1.png',width_edges = 1)
 ```
 
-Below is returned the $\widehat{G}^{TD}(t)$ returned fallowing Approach 1 and applying Bonferroni Correction.
+Below is returned the $\widehat{G}^{TD}(t)$ graph fallowing Approach 1 and applying Bonferroni Correction.
 
 ![__Figure 2: $\widehat{G}^{TD}(t)$ (Approach 1 + Bonferroni)__](images_td/Bonferroni/td_1.png)
 
 ### <span style="color: CornflowerBlue;"> 2.2)  Approach 2 </span> {#A2}
 
-As explained at the beginning of section 2, now we'll show what happens if we assume independence only in time and so treating each person singularly.
+As explained at the beginning of [Section 2](#PCG), now we show what happens if we assume independence only in time and so treating each person singularly.
 
-In the code reported below, in asd_cor & td_cor we compute the Pearson correlation coefficient for each person belonging to each group. Then we aggregate the data and we store them into the asd_matrix & td_matrix and, at the end, we use those two matrices to compute the new 80% threshold. 
+In the code reported below, in the **asd_cor** & **td_cor** lists we computed the Pearson Correlation Coefficient for each person belonging to each group. Then, the data have been aggregated and stored inside the **asd_matrix** and **td_matrix** matrices and, at the end, those two matrices have been combined together to compute the new 80% threshold. 
 
 We actually consider this approach more appropriate because the data coming "caltech" seems to be on a different scales compared to the one coming from "trinity". 
+
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 asd_cor = lapply(asd_sel, cor) # list of correlation matrices
@@ -275,9 +288,10 @@ t_zfisher = zfisher(t)
 ```
 
 
-#### <span style="color: CornflowerBlue;"> 2.2.1)  ASD Graph Connections </span>
+#### <span style="color: CornflowerBlue;"> 2.2.1)  ASD Graph Connections </span> {#ASDGC}
 
-Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the $\widehat{G}^{ASD}(t)$ as a weighted graph.
+Here, since we are following the approach 2, we have first computed graphs for each person (those are stored inside the **graph_asd_list**) and then we have combined them to return the $\widehat{G}^{ASD}(t)$ as a weighted graph. 
+
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 graph_asd_list <- get_graphs(asd_cor, t_zfisher) #graph per each asd person
 
@@ -290,7 +304,7 @@ for (g in graph_asd_list){
 
 ```
 
-Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (asd people). Following the path "images_asd/Bonferroni/" is possibile to find out all the 12 images graphs refering to each person.
+Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (ASD people). Following the path "images_asd/Bonferroni/" is possible to find out all the 12 images graphs (4+8) referring to each person.
 
 ```{r include=FALSE, message=FALSE, eval=TRUE, class.source="bg-success", warning=FALSE}
 p1 <- ggdraw() + draw_image("images_asd/asd_2_person_1.jpg", scale = 1)
@@ -311,7 +325,7 @@ plot_grid(p3, p4)
 
 __Figure 4: $\widehat{g}^{ASD}_3$(Person 3) & $\widehat{g}^{ASD}_4$(Person 4)__
 
-Now that we have computed graphs per each person separately, we can combine them into one weighted graph. The code and the picture below show the obtained graph.
+Now that we have computed graphs per each person separately, we combined them into one weighted graph. The code and the picture below show the obtained graph, $\widehat{G}^{ASD}(t)$.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 # get weighted graph by aggregating the 12 people graphs 
 edges_asd_2 <- get_aggregate_graph(asd_cor, t_zfisher) 
@@ -328,7 +342,8 @@ Below is returned the $\widehat{G}^{ASD}(t)$, fallowing Approach 2, with Bonferr
 
 #### <span style="color: CornflowerBlue;"> 2.2.2)  TD Graph Connections </span>
 
-Here, since we are following the approach 2, we first compute graphs for each person and then we combine them to return the $\widehat{G}^{TD}(t)$  as a weighted graph.
+Here, since we are still under Approach 2, we computed the same steps as described in [Section 2.2.1](#ASDGC) but now for people belongin to the TD group.
+
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 graph_td_list <- get_graphs(td_cor, t_zfisher) #graph per each td person
@@ -341,7 +356,7 @@ for (g in graph_td_list){
 
 ```
 
-Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (TD people). Following the path "images_td/Bonferroni/" is possible to find out all the 12 images graphs refering to each person.
+Below are plotted the first 4 graphs, representing the first 4 people in the given dataset (TD people). Following the path "images_td/Bonferroni/" is possible to find out all the 12 images graphs (4+8) referring to each person.
 
 ```{r include=FALSE, message=FALSE, eval=TRUE, class.source="bg-success", warning=FALSE}
 p1 <- ggdraw() + draw_image("images_td/td_2_person_1.jpg", scale = 1)
@@ -349,7 +364,6 @@ p2 <- ggdraw() + draw_image("images_td/td_2_person_2.jpg", scale = 1)
 p3 <- ggdraw() + draw_image("images_td/td_2_person_3.jpg", scale = 1)
 p4 <- ggdraw() + draw_image("images_td/td_2_person_4.jpg", scale = 1)
 ```
-
 
 
 ```{r include=TRUE, message=FALSE, eval=TRUE, class.source="bg-success", warning=FALSE}
@@ -364,7 +378,8 @@ plot_grid(p3, p4)
 
 __Figure 7: $\widehat{g}^{TD}_3$(Person 3) & $\widehat{g}^{TD}_4$(Person 4)__
 
-Now that we have computed graphs per each person separately, we can combine them into one weighted graph. The code and the picture below show the obtained graph.
+The code and the picture below show the weighted graph ($\widehat{g}^{TD}$) obtained once the singular unweighted graphs have been combined together.
+
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 # get weighted graph by aggregating the 12 people graphs
 edges_td_2 <- get_aggregate_graph(td_cor, t_zfisher)
@@ -382,11 +397,12 @@ Below is returned the $\widehat{G}^{TD}(t)$, fallowing Approach 2, with Bonferro
 
 ## <span style="color: purple;"> 3)  Correlation without Bonferroni </span>
 
-In this section we repeat the same procedures described above ([Approach 1](#A1) and [Approach 2](#A2)) but working with unadjusted intervals (No Bonferroni corrections).
+In this section we repeated the same procedures described above ([Approach 1](#A1) and [Approach 2](#A2)) but working with unadjusted intervals (No Bonferroni corrections).
 
 ### <span style="color: CornflowerBlue;"> 3.1)  Approach 1 without Bonferroni </span>
 
-Here below is reported the code used to compute the graphs for both ASD and TD people (following [Approach 1](#A1) ) without applying the Bonferroni correction.
+Here below is reported the code used to compute the graphs for both ASD and TD people (following [Approach 1](#A1) ) withOUT applying the Bonferroni correction.
+
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 # NO Bonferroni on ASD people
@@ -405,7 +421,7 @@ f_plot(graph_td_no_bonferroni,name='images_td/no_Bonferroni/td_1_no_bonferroni.p
 
 ```
 
-Here is it possible to see the new graphs generated __without__ the Bonferroni correction.
+Here is it possible to see the new graphs generated __withOUT__ the Bonferroni correction, $\widehat{G}^{ASD}(t)$ and $\widehat{G}^{TD}(t)$.
 
 ![__Figure 9: $\widehat{G}^{ASD}(t)$, fallowing Approach 1, withOUT Bonferroni Correction__](images_asd/no_Bonferroni/asd_1_no_bonferroni.png)
 
@@ -413,7 +429,7 @@ Here is it possible to see the new graphs generated __without__ the Bonferroni c
 
 ### <span style="color: CornflowerBlue;"> 3.2)  Approach 2 without Bonferroni </span>
 
-Here below is reported the code used to compute the graphs for both ASD and TD ( following the [Approach 2](#A2)) people without applying the Bonferroni correction.
+Here below is reported the code used to compute the graphs for both ASD and TD people (following the [Approach 2](#A2)) withOUT applying the Bonferroni correction.
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
 # Compute singular graphs per each person without Bonferroni correction
@@ -459,7 +475,7 @@ f_plot(graph_td_2_no_bonferroni,name='images_td/no_Bonferroni/td_2_no_bonferroni
 
 ```
 
-Here is it possible to see the new graphs generated __without__ the Bonferroni correction.
+Here is it possible to see the new graphs generated __withOUT__ the Bonferroni correction, $\widehat{G}^{ASD}(t)$ and $\widehat{G}^{TD}(t)$.
 
 ![__Figure 11: $\widehat{G}^{ASD}(t)$, fallowing Approach 2, withOUT Bonferroni Correction__](images_asd/no_Bonferroni/asd_2_no_bonferroni.png)
 
@@ -467,37 +483,32 @@ Here is it possible to see the new graphs generated __without__ the Bonferroni c
 
 ## <span style="color: purple;"> 4)  RESULTS </span>
 
-Fallowing [Approach 1](#A1) one gets slightly more connections among ROIs in td people (560 edges) compared to the people with asd (474 edges). It is interesting to notice that most of the connections are shared by both. In fact if we do the intersection among the two graphs (\textit{graph_asd %s% graph_td}) it is possible to find out that they share 358 edges.  
+Following [Approach 1](#A1) we gets slightly more connections among ROIs in TD people (560 edges) compared to the people with ASD (474 edges). It is interesting to notice that most of the connections are shared by both. In fact, if we do the intersection among the two graphs (*graph_asd %s% graph_td*) it is possible to find out that they share 358 edges. 
 
-Instead, [Approach 1](#A2)  make possible to see that most of the thickest edges (i.e edges most common in each respective population) are present in both graphs. 
+Instead, [Approach 2](#A2)  makes it possible to see that most of the thickest edges (i.e edges most common in each respective population) are present in both graphs, with only few exceptions.
+We would like to remind that this approach is considered more representative because it is robust to scale changes that we spotted in the data (assuming that this is the only difference and the data is overall comparable).
 
-#####################
-6002--6001
-2301--2311
-8102--3002
-#######################
+As a general note, we want to to point out that having some domain knowledge would help to draw some more robust conclusions (like knowing if some ROIs are more significant then others to spot differences among the two groups). But also knowing how the data have been collected and how the data manipulation has been performed could impact for the conclusions. 
 
-As a general note, we want to to point out that having some domain knowledge would help to draw some more robust conclusions. For example, knowing how the data have been collected, if there could be an intrinsic bias in the data collection procedure. Like for example if some ROI are more significant then others. 
+Regarding the Bonferroni correction we want to point that, as expected, the number of "findings" (without applying it) is significantly higher than compared to the graph generated with the multiplicity correction. The reason why using as a Null Hypothesis that $\rho$ is inside the interval $[-t,t]$ is useful is that it reduces the number of edges in the graphs.
 
+In this case in particular, if one "forgets" to apply the correction, not only one gets incorrect statistical inferences but the stronger connections (that we believe are the most significant) get lost since also too many edges with a weak correlation would be returned in the graph. This makes it almost impossible to spot the differences in particular just by looking at the graphs. For example by looking at the Figures 11 and 12 it is very difficult to spot any clear differences.
 
-Regarding the Bonferroni correction we want to point that, as expected, the number of "findings" without applying it, is significantly higher than compared to the graph generated with the multiplicity correction. The reason why using as a Null Hypothesis that rho is inside the interval [-t,t] is useful is that it reduces the number of edges in the graphs.
+`r emo::ji("warning")` We still want to point out that the Bonferroni correction and all the multiplicity corrections in general are not to get "less" data because it makes it easy to draw conclusions, but they're used to contrast the possibility of making erroneous inferences.
 
-The Bonferroni correction and all the multiplicity corrections in general are not to get "less" data because it makes it easy to draw conclusions, but they're used to contrast the possibility of making erroneous inferences.
-In this case in particular, if one "forgets" to apply the correction, not only one gets incorrect statistical inferences but the stronger connections (that we believe are the most significant) get lost since also too many edges with a weak correlation would be in the graph.
-
+One final remark, both graph representations do not distinguish between a positive and negative correlations. We noticed that sometimes there is a positive correlation in one of the two groups whereas in the other is negative. We haven't looked further into this phenomenon but it is worth to point it out and keep it in mind. 
 
 ## <span style="color: purple;"> 5)  BONUS </span>
 
 In order to implement the bootstrapping procedure, we have decided to follow [Approach 1](#A1) to make it simpler to frame the problem. 
 
-By looking at the data, we found out that they are very close to the normal distribution (as shown in Figure 13), so we have decided to compute Normal Confidence intervals. Every plot represents an example of the Correlation difference between two ROIs (ROIs are numbered from 1 to 116). In red the normal distribution with mean and standard deviation equal to the mean and the standard deviation of the difference correlation data(ex.:$mean(\Delta_{1,106})$, $sd(\Delta_{1,106})$), whereas the green curve is the actual density from the bootstrap. 
+By looking at the data, we found out that they are very close to the normal distribution (as shown in Figure 13), so we have decided to compute Normal Confidence intervals. Every plot represents an example of the Correlation difference ($\Delta_{i,j}$) between two ROIs (ROIs are numbered from 1 to 116). In red the normal distribution with mean and standard deviation equal to the mean and the standard deviation of the difference correlation data (example: $Normal$( $mean$($\Delta_{1,106}$), $sd$($\Delta_{1,106}$)), whereas the green curve is the actual density from the bootstrap. 
 
 \[CI_{normal} = \widehat{\rho_{n}} \pm z_{\frac{\alpha}{2}}*\widehat{se_{boot}} \] 
+<br><br>
 
 ![__Figure 13: Check Normality Condition__](images_bootstrap/Difference_distribution.png)
-
-In Figure 13
-
+<br><br>
 
 Below is reported the code used to plot Figure 13:
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
@@ -505,7 +516,7 @@ png(filename='images_bootstrap/Difference_distribution.png', width = 1000, heigh
 par(mfrow = c(2, 3))
 for (i in 100:105){
   if (i!=105){
-  y <- array(boots_tensor_res[1,i+1,])
+  y <- array(boots_tensor_res[1,i+1,]) # pick a slice from the tensor
   hist(y, freq=FALSE, col = 'CornflowerBlue', ylim = c(0,max(density(y)$y)+1),
        main = bquote(paste('Distribution of ROI'[1],' and ROI',''[.(i+1)] )),
        font.main=4,
@@ -527,18 +538,20 @@ dev.off() # close and save image
 ```
 
 
-We realized that, even if we use a threshold t=0, by using the normal confidence intervals we get few edges in the difference graph. Since after the Bonferroni correction, extreme values become relevant and tails of the distributions are not well approximated by the Gaussian, we also computed Percentile Confidence Intervals to compute the difference graph, assuming that symmetrizing condition holds. 
+We realized that, even if we use a threshold $t = 0$, by using the normal confidence intervals we get few edges in the difference graph. Since after the Bonferroni correction, extreme values become relevant and tails of the distributions are not well approximated by the Gaussian, we also computed Percentile Confidence Intervals to compute the difference graph, assuming that symmetrizing condition holds. 
 
 \[CI_{percentile} = quantile(data, \frac{\alpha}{2}, 1-\frac{\alpha}{2}) \] 
 
-Regarding the threshold (t), since it is arbitrary and it is used to decide what is relevant and what not,  we have seen that setting t =0 still a small number of edges are identified. For that reason we have left it equals to zero. 
+Regarding the threshold ($t$), since it is arbitrary and it is used to decide what is relevant and what not,  we have seen that setting $t = 0$ still returns a small number of edges. For that reason we have left it equals to zero. 
 
 ### <span style="color: CornflowerBlue;"> 5.1) Practical Bootstrap Implementation </span>
 
-We used a $116*116*S$ tensor(where S is the bootstrap size set equal to 5000), 
-where we stored S difference correlation matrices. The reason why we used a tensor tot store the bootstrap results is that this allowed us easy get all the values that the bootstrap produced for an entry of the correlation matrix.
+We used a $116*116*S$ tensor (where $S$ is the bootstrap size set equal to 5000), 
+where we stored $S$ difference correlation matrices. The reason why we used a tensor to store the bootstrap results is that this allowed us to easily get all the values that the bootstrap produced has produced.
 
-The Non-Parametric bootstrap procedure involves a resampling method from the population (where the population is considered the in-our-hand-data) so, in every $s^{th}$ step, both for ASD and TD groups we picked at random 12 people __with__ replacement. Then, by following [Approach 1](#A1), we computed the Pearson-Correlation-Coefficient for both groups (ASD, TD) and after that the Difference-Correlation is computed ($|\Delta_{jk}| = |\rho_{jk}^{ASD} - \rho_{jk}^{TD}|$). 
+The Non-Parametric bootstrap procedure involves a resampling method from the population (where the population is considered the "in-our-hand-data") so, in every $s^{th}$ step, both for ASD and TD groups we picked at random 12 people __with__ replacement. Then, by following [Approach 1](#A1), we computed the Pearson-Correlation-Coefficient for both groups (ASD, TD) and after that the Difference-Correlation is computed ($|\Delta_{jk}| = |\rho_{jk}^{ASD} - \rho_{jk}^{TD}|$). 
+
+Below the code implementation of the bootstrap procedure:
 
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 S <- 5000 # bootstrap size
@@ -560,14 +573,20 @@ for (i in 1:S){
   #We calculate the correlation matrix for both the asd and the 
   boots_asd_cor <- cor(boots_asd)
   boots_td_cor <- cor(boots_td)
-  boots_delta <- (boots_asd_cor - boots_td_cor)/2 
+  boots_delta <- boots_asd_cor - boots_td_cor #difference correlation
   boots_tensor_res[,,i] <- boots_delta #We store the computed matrix with all the difference as one slice of a tensor.
   if (i%%100 == 0) print(i)
 }
 ```
 
 
-Below the code used to compute the Normal and Percentile Confidence Intervals:
+Below the code used to compute the Normal and Percentile Confidence Intervals plus the function used to return the adjacency matrix based on one of the previously choosen CIs methods:
+
+* __percentile_CI:__ it computes the Percentile CI. The *point_estimate* variable it has been inserted in order to avoid an if statement in the __diff_matrix__ function. It will actually not be used by the function.
+
+* __normal_CI:__ it computes the Normal CI.
+
+* __diff_matrix:__ it computes and returns an adjacency matrix based on the previously chosen method to compute CIs (either Normal or Percentile)
 
 ```{r include=TRUE, message=FALSE, eval=FALSE, class.source="bg-success", warning=FALSE}
 
@@ -589,10 +608,9 @@ normal_CI <-function(datax,alpha,point_estimate){
 }
 
 
-TEST_MATRIX_percentile=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
-
+# this function returns an adjacency matrix based on either Normola or Percentile CI
 diff_matrix <- function(interval.function){
-  TEST_MATRIX=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
+  DIFF_MATRIX=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
   for (a in 1:116) {
     for (b in a:116){
       if (a!=b){
@@ -601,19 +619,19 @@ diff_matrix <- function(interval.function){
                                     point_estimate=difference_matrix[a,b]) # compute intervals
         if (0>= intervals[2] | 0<= intervals[1]){
           #if zero is not in the interval put 1 in the matrix
-          TEST_MATRIX[a,b]=1
-          TEST_MATRIX[b,a]=1 
+          DIFF_MATRIX[a,b]=1
+          DIFF_MATRIX[b,a]=1 
         }
         else {#if zero is in the interval put 0 in the matrix
-          TEST_MATRIX[a,b]=0
-          TEST_MATRIX[b,a]=0
+          DIFF_MATRIX[a,b]=0
+          DIFF_MATRIX[b,a]=0
         }
         }
-      else TEST_MATRIX[a,b]=0 # put zero on the diagonal
+      else DIFF_MATRIX[a,b]=0 # put zero on the diagonal
       
     }
   }
-  return(TEST_MATRIX) #return edge matrix
+  return(DIFF_MATRIX) #return edge matrix
 }
 
 
@@ -631,9 +649,14 @@ f_plot(difference_graph_normal,name='difference_graph_normal.png')
 ```
 
 
-In this case, the Normal CI are more rigid and fewer, compared to the Percentile CI edges appear in the difference graph $G^{\Delta}(t)$. So, if someone wants to return only "good edges" it is better to stay stick with the normal CI. On the other hand, if someone wants to return more edges, i.e including not only the strongest one, it is batter to move to the Percentile intervals.
-Figure 14 and 15 show the 2 obtained $G^{\Delta}_{normal}(t)$, $G^{\Delta}_{percentile}(t)$.
+In this case, the Normal CIs are more rigid and fewer edges, compared to the Percentile CIs, appear in the difference graph $G^{\Delta}(t)$. So, if someone wants to return only "good edges" it is better to stay stick with the normal CI. This is due to the fact we are looking for an interval with an adjusted confidence level very small and the Gaussian approximation is worst in the tails.
 
+On the other hand, if someone wants to return more edges, i.e including not only the strongest one, it is batter to move to the Percentile intervals. The Percentile approach do not allow end-points to go outside from what is in the data. A Z-Fisher-Transform could be used to move in the domain of $(-\infty, + \infty)$ but, since the $\Delta_{i,j}^{th}$ differences are mostly close to zero, the transformation becomes not so useful. 
+
+Notice how this a "double edged sword": it is possible that the Gaussian approach generalizes better because there could be a lack of extreme values in the dataset. 
+
+
+Figure 14 and 15 show the 2 obtained $G^{\Delta}_{normal}(t)$, $G^{\Delta}_{percentile}(t)$.
 
 ![__Figure 14: $G^{\Delta}(t)$ generated by using Normal CI__](images_bootstrap/difference_graph_normal.png)
 

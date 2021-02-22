@@ -1,5 +1,5 @@
 
-# Libraries, Imports & Functions -------------------------------------------
+# 1. Libraries, Imports & Functions -------------------------------------------
 set.seed(42)
 library(igraph)
 library(tensorr)
@@ -95,7 +95,7 @@ get_aggregate_graph <- function(list_df,t,bonferroni=TRUE){
 
 # Point 2.1  WITH BONFERRONI--------------------------------------------------------
 
-# APPROACH 1:
+# (2.1.1) APPROACH 1:
 
 asd_bind = do.call(rbind, asd_sel) # aggregate asd data
 td_bind = do.call(rbind, td_sel) # aggregate td data
@@ -136,7 +136,7 @@ td_eigen_centrality = eigen_centrality(graph_td)
 plot(sort(td_eigen_centrality$vector), main='td', ylab='td centrality')
 
 
-# APPRACH 2 :
+# (2.1.1) APPRACH 2 :
 
 asd_cor = lapply(asd_sel, cor) # list of correlation matrices
 td_cor = lapply(td_sel, cor) # list of correlation matrices
@@ -190,7 +190,7 @@ for (g in graph_td_list){
 
 # Point 2.2  WITHOUT BONFERRONI--------------------------------------------------------
 
-# APPROACH 1:
+# (2.2.1) APPROACH 1:
 asd_bind_matrix_zfisher_no_bonferroni <- find_edges(asd_bind_matrix_zfisher_cor, 145*12, t_bind_zfisher,bonferroni=FALSE )
 graph_asd_no_bonferroni <- graph_from_adjacency_matrix(asd_bind_matrix_zfisher_no_bonferroni, mode = c("undirected") )
 f_plot(graph_asd_no_bonferroni,name='images_asd/no_Bonferroni/asd_1_no_bonferroni.png',width_edges = 1)
@@ -203,7 +203,7 @@ f_plot(graph_td_no_bonferroni,name='images_td/no_Bonferroni/td_1_no_bonferroni.p
 sum(asd_bind_matrix_zfisher - asd_bind_matrix_zfisher_no_bonferroni)
 sum(td_bind_matrix_zfisher - td_bind_matrix_zfisher_no_bonferroni)
 
-# APPROACH 2:
+# (2.2.2) APPROACH 2:
 
 edges_asd_2_no_bonferroni <- get_aggregate_graph(asd_cor, t_zfisher, bonferroni = FALSE)
 graph_asd_2_no_bonferroni <- graph_from_adjacency_matrix(edges_asd_2_no_bonferroni,
@@ -245,7 +245,7 @@ for (g in graph_td_list_no_bonferroni){
 # to maintain lower the variance (ADD THIS COMMENT)
 
 
-S <- 500
+S <- 5000
 
 difference_matrix <- asd_bind_cor - td_bind_cor
 dims <- c(116,116,S)
@@ -287,7 +287,7 @@ for (i in 100:105){
   else{
     plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
     legend("center", legend=c("Normal Distribution", "Actual Distribution"),
-           col=c("red", "green"), lty=2:3, pt.cex=5, cex=2.5, bty='o')
+           col=c("red", "green"), lty=1:3, pt.cex=5, cex=2.5, bty='o')
   }
 }
 dev.off() # close and save image
@@ -310,10 +310,8 @@ normal_CI <-function(datax,alpha,point_estimate){
 }
 
 
-TEST_MATRIX_percentile=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
-
 diff_matrix <- function(interval.function){
-  TEST_MATRIX=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
+  DIFF_MATRIX=asd_cor[[1]] # here we call asd_cor just to copy the correct names on each row and col.
   for (a in 1:116) {
     for (b in a:116){
       if (a!=b){
@@ -322,19 +320,19 @@ diff_matrix <- function(interval.function){
                                     point_estimate=difference_matrix[a,b]) # compute intervals
         if (0>= intervals[2] | 0<= intervals[1]){
           #if zero is not in the interval put 1 in the matrix
-          TEST_MATRIX[a,b]=1
-          TEST_MATRIX[b,a]=1 
+          DIFF_MATRIX[a,b]=1
+          DIFF_MATRIX[b,a]=1 
         }
         else {#if zero is in the interval put 0 in the matrix
-          TEST_MATRIX[a,b]=0
-          TEST_MATRIX[b,a]=0
+          DIFF_MATRIX[a,b]=0
+          DIFF_MATRIX[b,a]=0
         }
       }
-      else TEST_MATRIX[a,b]=0 # put zero on the diagonal
+      else DIFF_MATRIX[a,b]=0 # put zero on the diagonal
       
     }
   }
-  return(TEST_MATRIX) #return edge matrix
+  return(DIFF_MATRIX) #return edge matrix
 }
 
 
@@ -348,35 +346,3 @@ difference_graph_normal<- graph_from_adjacency_matrix(diff_matrix(normal_CI),
 f_plot(difference_graph_percentile,name='images_bootstrap/difference_graph_percentile.png')
 # save Percentile graph
 f_plot(difference_graph_normal,name='images_bootstrap/difference_graph_normal.png')
-
-
-
-
-sum(diff_matrix(normal_CI))/2
-##############################
-
-
-gsize(graph_asd)
-gsize(graph_td)
-asd_sum <- 0
-td_sum <- 0
-for (i in 1:12) {
-  asd_sum <- asd_sum + gsize(graph_asd_list[[i]])
-  td_sum <- td_sum + gsize(graph_td_list[[i]])
-}
-
-graph_asd_test <- graph_asd %s% graph_td
-
-f_plot(graph_asd_test,name='images_td/intersection.png')
-
-as_edgelist(graph_asd)
-
-asd_sum
-td_sum
-
-
-
-
-
-edge_attr(graph_asd_2, index =c(8102) )
-
